@@ -1,0 +1,10 @@
+_build/
+node_modules/
+data/
+*.exe
+.DS_Store
+.merlin
+*.install
+*.byte
+*.native
+take-screenshots.cjs

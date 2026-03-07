@@ -1,0 +1,5 @@
+(library
+ (name ahrefs_greenhouse)
+ (modules greenhouse_client)
+ (libraries cohttp-lwt-unix cohttp-lwt lwt yojson unix)
+ (preprocess (pps lwt_ppx)))

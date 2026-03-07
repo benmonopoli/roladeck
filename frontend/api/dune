@@ -1,0 +1,6 @@
+(library
+ (name ahrefs_frontend_api)
+ (modes melange)
+ (libraries ahrefs_types reason-react melange.dom melange-fetch)
+ (preprocess
+  (pps melange.ppx reason-react-ppx)))

@@ -1,0 +1,4 @@
+(library
+ (name ahrefs_auth)
+ (modules auth)
+ (libraries ahrefs_types ahrefs_storage digestif kdf.pbkdf mirage-crypto-rng dream unix))

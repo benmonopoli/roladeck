@@ -1,0 +1,4 @@
+(library
+ (name ahrefs_types)
+ (modules types)
+ (modes native melange))

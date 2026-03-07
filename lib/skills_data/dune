@@ -1,0 +1,13 @@
+(library
+ (name ahrefs_skills_data)
+ (modules skills_registry)
+ (libraries ahrefs_types))
+
+; Run `dune build @gen-skills` to regenerate skills_registry.ml from SKILL.md files
+(rule
+ (alias gen-skills)
+ (targets skills_registry.ml)
+ (action
+  (run %{exe:../codegen/gen_skills.exe}
+       --skills-dir /Users/benmonopoli/ahrefs-recruit/open-recruit-skills-src/skills
+       --output %{targets})))

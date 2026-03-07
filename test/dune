@@ -1,0 +1,4 @@
+(test
+ (name test_scoring)
+ (modules test_scoring)
+ (libraries ahrefs_types ahrefs_scoring alcotest))

@@ -1,0 +1,8 @@
+(library
+ (name ahrefs_sync)
+ (modules greenhouse_sync)
+ (libraries
+   ahrefs_types ahrefs_json ahrefs_storage
+   ahrefs_greenhouse ahrefs_scoring ahrefs_skills_data
+   lwt yojson unix)
+ (preprocess (pps lwt_ppx)))

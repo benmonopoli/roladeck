@@ -1,0 +1,4 @@
+(executable
+ (name gen_skills)
+ (modules gen_skills skill_parser skill_emitter)
+ (libraries ahrefs_types omd str))

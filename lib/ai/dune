@@ -1,0 +1,7 @@
+(library
+ (name ahrefs_ai)
+ (modules anthropic_client openai_client ai_sourcing company_research)
+ (libraries
+   ahrefs_types ahrefs_json ahrefs_skills_data ahrefs_storage
+   cohttp-lwt-unix lwt yojson unix)
+ (preprocess (pps lwt_ppx)))

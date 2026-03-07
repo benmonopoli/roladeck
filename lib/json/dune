@@ -1,0 +1,4 @@
+(library
+ (name ahrefs_json)
+ (modules types_j)
+ (libraries ahrefs_types yojson))

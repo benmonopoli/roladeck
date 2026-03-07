@@ -1,0 +1,5 @@
+(library
+ (name ahrefs_api)
+ (modules handlers router)
+ (libraries ahrefs_types ahrefs_json ahrefs_skills_data ahrefs_scoring ahrefs_sourcing ahrefs_storage ahrefs_auth ahrefs_ai ahrefs_greenhouse ahrefs_sync dream yojson lwt unix cohttp-lwt-unix cohttp-lwt)
+ (preprocess (pps lwt_ppx)))

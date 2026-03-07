@@ -1,0 +1,3 @@
+(executable
+ (name main)
+ (libraries ahrefs_types ahrefs_skills_data ahrefs_scoring ahrefs_sourcing ahrefs_api ahrefs_sync dream))

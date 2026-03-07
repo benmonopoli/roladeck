@@ -1,0 +1,8 @@
+(melange.emit
+ (target frontend)
+ (alias frontend)
+ (modules App Index Components)
+ (module_systems es6)
+ (libraries ahrefs_types ahrefs_scoring ahrefs_sourcing ahrefs_frontend_components reason-react melange.dom)
+ (preprocess (pps melange.ppx reason-react-ppx))
+)
