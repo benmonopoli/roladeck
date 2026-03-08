@@ -458,20 +458,33 @@ a:hover { text-decoration: underline; }
 }
 .clear-btn:hover { background: var(--cream-dark); }
 
+.back-link {
+  font-size: 13px; color: var(--ink-3); font-weight: 500;
+  background: none; border: none; cursor: pointer; padding: 0;
+  margin-bottom: 6px; display: block;
+}
+.back-link:hover { color: var(--orange); }
+
+.pool-card-stats {
+  display: flex; gap: 14px; margin-top: 8px; margin-bottom: 4px;
+}
+.pool-card-count { font-size: 13px; font-weight: 600; color: var(--ink); }
+.pool-card-best { font-size: 13px; color: var(--ink-2); }
+
 /* Pool table (div-based) */
 .pool-table {
   background: var(--white); border: 1px solid var(--rule);
   border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card);
 }
 .pool-table-head {
-  display: grid; grid-template-columns: 2fr 2fr 1.4fr 1fr 1fr .9fr;
+  display: grid; grid-template-columns: 2.5fr 2fr 1.4fr 1fr .9fr;
   padding: 10px 18px 10px;
   font-size: 11px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .08em; color: var(--ink-3);
   border-bottom: 2px solid var(--rule);
 }
 .pool-row {
-  display: grid; grid-template-columns: 2fr 2fr 1.4fr 1fr 1fr .9fr;
+  display: grid; grid-template-columns: 2.5fr 2fr 1.4fr 1fr .9fr;
   padding: 13px 18px; border-bottom: 1px solid var(--rule);
   cursor: pointer; text-align: left; width: 100%;
   transition: background .1s; align-items: center;
