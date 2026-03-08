@@ -1,5 +1,5 @@
 [@react.component]
-let make = (~onLogin: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoSignup: unit => unit) => {
+let make = (~onLogin: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoSignup: unit => unit, ~onGoHome: unit => unit) => {
   let (email, setEmail)       = React.useState(() => "");
   let (password, setPassword) = React.useState(() => "");
   let (loading, setLoading)   = React.useState(() => false);
@@ -28,6 +28,9 @@ let make = (~onLogin: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoSignup: uni
 
   <div className="auth-wrap">
     <div className="auth-card">
+      <button className="auth-back" onClick={_ => onGoHome()}>
+        {React.string("< Back")}
+      </button>
       <div className="brand-row">
         <span className="brand-mark">
           <svg viewBox="0 0 34 30" width="28" height="25" fill="none">

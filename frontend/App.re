@@ -82,6 +82,7 @@ let make = () => {
           setView(_ => Home);
         }}
         onGoSignup={() => setView(_ => Signup)}
+        onGoHome={() => setView(_ => Home)}
       />
     | Signup =>
       <Components.Signup
