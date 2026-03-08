@@ -5,7 +5,7 @@ let () = Random.self_init ()
 
 let data_dir =
   let home = Sys.getenv_opt "HOME" |> Option.value ~default:"/tmp" in
-  Filename.concat home ".ahrefs-recruit"
+  Filename.concat home ".roladeck"
 
 let ensure_dir () =
   if not (Sys.file_exists data_dir) then

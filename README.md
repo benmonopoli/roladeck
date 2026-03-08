@@ -79,13 +79,15 @@ Connect your AI provider and ATS from Settings. Supports Anthropic Claude, OpenA
 - AI: pluggable provider (Anthropic, OpenAI, Perplexity)
 - ATS: Greenhouse sync
 
+OCaml and ReasonML are a deliberate choice. The strong static type system catches entire classes of bugs at compile time — mismatched JSON shapes, missing match cases, incorrect field access — that would surface as runtime errors in a dynamically typed stack. Dream is fast, minimal, and fits the single-binary deployment model well. Melange lets the frontend share type definitions directly with the backend, so the API contract is enforced by the compiler rather than by documentation. It's also the stack Ahrefs runs in production, so it felt like the right fit for a tool built with that context.
+
 ---
 
 ## Production considerations
 
 This is a working prototype built to validate the concept. A few things worth flagging before treating it as production infrastructure:
 
-**Storage.** Candidate and session data is stored as flat JSON files under `~/.ahrefs-recruit/`. Writes use atomic rename (`write to .tmp, rename into place`) which is safe for single-process use. The Greenhouse sync loop runs concurrently with user requests via cooperative multitasking, so concurrent writes to the same tenant's pool are possible under load. A proper deployment would swap the storage layer for Postgres and add a connection pool — the storage interface is isolated enough to make that a contained change.
+**Storage.** Candidate and session data is stored as flat JSON files under `~/.roladeck/`. Writes use atomic rename (`write to .tmp, rename into place`) which is safe for single-process use. The Greenhouse sync loop runs concurrently with user requests via cooperative multitasking, so concurrent writes to the same tenant's pool are possible under load. A proper deployment would swap the storage layer for Postgres and add a connection pool — the storage interface is isolated enough to make that a contained change.
 
 **CORS.** The API currently sends `Access-Control-Allow-Origin: *`. Fine for local dev, should be locked to the frontend origin before any public deployment.
 
@@ -99,14 +101,17 @@ This is a working prototype built to validate the concept. A few things worth fl
 
 ### Prerequisites
 
-- OCaml + opam
-- Node.js
-- Dune
+- OCaml 5.x + opam
+- Node.js 18+
+- Dune 3.14+
 
 ### Install
 
 ```bash
-opam switch create . --deps-only
+# Install OCaml dependencies
+opam install . --deps-only
+
+# Install Node dependencies (Melange compiler + Vite)
 npm install
 ```
 
@@ -118,4 +123,6 @@ dune exec bin/main.exe   # backend on :4000
 npm run dev              # frontend on :3000
 ```
 
-Connect your AI provider and Greenhouse from Settings. Company data is stored per-tenant under `~/.ahrefs-recruit/tenants/{company_id}/`.
+Connect your AI provider and Greenhouse from Settings. Data is stored per-tenant under `~/.roladeck/tenants/{company_id}/`.
+
+> The internal OCaml library names (`ahrefs_types`, `ahrefs_storage`, etc.) reflect the project's working name during development. The product is RolaDeck.

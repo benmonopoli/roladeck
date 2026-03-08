@@ -1,0 +1,29 @@
+opam-version: "2.0"
+name: "roladeck"
+synopsis: "AI-powered recruiting intelligence — ATS scoring, playbook classification, talent pool"
+maintainer: "Ben Monopoli <ben.monopoli@ahrefs.com>"
+authors: ["Ben Monopoli"]
+license: "MIT"
+homepage: "https://github.com/benmonopoli/roladeck"
+bug-reports: "https://github.com/benmonopoli/roladeck/issues"
+depends: [
+  "ocaml"           {>= "5.0"}
+  "dune"            {>= "3.14"}
+  "dream"
+  "yojson"
+  "lwt"
+  "lwt_ppx"
+  "cohttp-lwt-unix"
+  "cohttp-lwt"
+  "digestif"
+  "kdf"
+  "pbkdf"
+  "mirage-crypto-rng"
+  "omd"
+  "melange"         {>= "4.0"}
+  "reason"
+  "mel"
+]
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
