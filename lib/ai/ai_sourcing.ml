@@ -120,28 +120,30 @@ let build_user_prompt (req : ai_sourcing_request) (skill : skill_record) =
   Printf.sprintf "Please source %s-level %s candidates for Ahrefs. Use web search to find real people with public profiles.%s"
     (seniority_to_string req.seniority) skill.discipline.name extra
 
-(* Extract JSON object from text — find first { to last } *)
+(* Extract JSON object from text using brace-depth tracking.
+   Finds the first '{' then walks forward counting opens/closes to find
+   the matching '}'. This handles trailing content (code fences, prose)
+   that would cause a first-to-last approach to return malformed JSON. *)
 let extract_json_from_text text =
   let n = String.length text in
-  let start =
-    let rec find i =
+  let rec find_open i =
+    if i >= n then None
+    else if text.[i] = '{' then Some i
+    else find_open (i + 1)
+  in
+  match find_open 0 with
+  | None -> None
+  | Some start ->
+    let rec find_close i depth =
       if i >= n then None
-      else if text.[i] = '{' then Some i
-      else find (i + 1)
+      else match text.[i] with
+        | '{' -> find_close (i + 1) (depth + 1)
+        | '}' -> if depth = 1 then Some i else find_close (i + 1) (depth - 1)
+        | _   -> find_close (i + 1) depth
     in
-    find 0
-  in
-  let stop =
-    let rec find i =
-      if i < 0 then None
-      else if text.[i] = '}' then Some i
-      else find (i - 1)
-    in
-    find (n - 1)
-  in
-  match start, stop with
-  | Some s, Some e when e > s -> Some (String.sub text s (e - s + 1))
-  | _ -> None
+    (match find_close (start + 1) 1 with
+     | None -> None
+     | Some stop -> Some (String.sub text start (stop - start + 1)))
 
 let parse_response ~session_id ~role_id ~role_name ~seniority text =
   match extract_json_from_text text with
