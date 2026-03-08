@@ -18,7 +18,7 @@ let apply_enrichment discipline_id base_criteria =
   | None -> base_criteria
   | Some extra -> base_criteria @ extra
 
-(** Tokenize text: lowercase, split on non-alphanumeric *)
+(** Tokenize text: lowercase, split on non-alphanumeric, keep words >= 3 chars *)
 let tokenize s =
   let s = String.lowercase_ascii s in
   let words = ref [] in
@@ -36,7 +36,63 @@ let tokenize s =
   if String.length w >= 3 then words := w :: !words;
   List.rev !words
 
-(** Keyword overlap between criterion text and candidate notes *)
+(** Filler words common in hiring criteria that carry no evidential signal.
+    Filtering these prevents "experience" or "knowledge" in candidate notes
+    from contributing to a criterion match when the real term is absent. *)
+let stop_words =
+  let tbl = Hashtbl.create 64 in
+  List.iter (fun w -> Hashtbl.replace tbl w ()) [
+    (* Generic competency filler *)
+    "experience"; "knowledge"; "understanding"; "ability"; "skills"; "skill";
+    "familiarity"; "familiars"; "proficiency"; "proficient"; "competency";
+    (* Qualifiers that mean nothing without the adjacent noun *)
+    "strong"; "solid"; "proven"; "excellent"; "demonstrated"; "clear";
+    "good"; "great"; "deep"; "broad"; "relevant"; "related"; "practical";
+    "hands"; "handson"; "working"; "effective"; "comfortable";
+    (* Career-arc filler *)
+    "background"; "track"; "record"; "exposure"; "awareness"; "history";
+    (* Time filler *)
+    "years"; "year";
+    (* Function words that survive the 3-char tokeniser filter *)
+    "the"; "and"; "for"; "with"; "can"; "has"; "its"; "are"; "was";
+    "all"; "any"; "not"; "our"; "use"; "used"; "able"; "will"; "well";
+    "high"; "some"; "very"; "plus"; "via"; "etc"; "e.g"; "i.e";
+  ];
+  tbl
+
+let is_stop w = Hashtbl.mem stop_words w
+
+let significant_tokens tokens = List.filter (fun t -> not (is_stop t)) tokens
+
+(** Build consecutive bigrams from a token list *)
+let bigrams tokens =
+  let rec go acc = function
+    | a :: (b :: _ as rest) -> go ((a ^ " " ^ b) :: acc) rest
+    | _ -> List.rev acc
+  in
+  go [] tokens
+
+(** Normalise for phrase search: lowercase + replace punctuation with spaces
+    so "machine-learning" matches the phrase "machine learning". *)
+let normalise s =
+  String.lowercase_ascii s
+  |> String.map (fun c ->
+       match c with
+       | '-' | '_' | '/' | '\\' | '(' | ')' | ',' | '.' | '+' | ':' | ';' -> ' '
+       | _ -> c)
+
+let contains_phrase haystack phrase =
+  let hlen = String.length haystack and plen = String.length phrase in
+  if plen = 0 || plen > hlen then false
+  else begin
+    let found = ref false in
+    for i = 0 to hlen - plen do
+      if String.sub haystack i plen = phrase then found := true
+    done;
+    !found
+  end
+
+(** Keyword overlap between criterion text and candidate notes (all tokens) *)
 let keyword_overlap criterion_text notes =
   let criterion_tokens = tokenize criterion_text in
   let notes_tokens = tokenize notes in
@@ -44,18 +100,47 @@ let keyword_overlap criterion_text notes =
   List.iter (fun t -> Hashtbl.replace notes_set t true) notes_tokens;
   List.filter (fun t -> Hashtbl.mem notes_set t) criterion_tokens
 
-(** Criterion is "met" if >= 2 keywords overlap *)
+(** Criterion is met using stop-word-aware matching with a phrase bonus.
+
+    1. Extract significant (non-stop) tokens from the criterion.
+    2. Phrase check: if any consecutive bigram of significant tokens appears
+       verbatim in the candidate notes (after normalisation), the criterion
+       is met. This catches "distributed systems" appearing as a phrase,
+       which is strong evidence even if just one token matched elsewhere.
+    3. Token fallback: count significant token overlap.
+       - 0 significant tokens → fall back to old 2-token rule
+       - 1 significant token  → need that 1 token to appear in notes
+       - 2+ significant tokens → need at least 2 to appear
+
+    The matched_keywords returned are the significant tokens that matched
+    (or the raw overlap if no significant tokens matched), used for UI display. *)
 let criterion_met criterion notes =
-  let overlap = keyword_overlap criterion.text notes in
-  List.length overlap >= 2, overlap
+  let ct_sig = significant_tokens (tokenize criterion.text) in
+  let n_sig = List.length ct_sig in
+  let notes_norm = normalise notes in
+  (* Phrase check: any sig bigram appearing verbatim is strong evidence *)
+  let phrase_hit =
+    bigrams ct_sig |> List.exists (fun phrase -> contains_phrase notes_norm phrase)
+  in
+  if phrase_hit then
+    true, ct_sig
+  else begin
+    let overlap = keyword_overlap criterion.text notes in
+    let sig_overlap = significant_tokens overlap in
+    let n_sig_hit = List.length sig_overlap in
+    let threshold =
+      if n_sig = 0 then 2        (* no sig tokens: preserve old behaviour *)
+      else if n_sig = 1 then 1   (* single meaningful term: require it *)
+      else 2                     (* 2+ meaningful terms: require 2 to appear *)
+    in
+    let met = n_sig_hit >= threshold in
+    met, (if sig_overlap <> [] then sig_overlap else overlap)
+  end
 
 (** Check if a red flag text appears in candidate notes *)
 let red_flag_hit flag_text notes =
-  let fl = String.lowercase_ascii flag_text in
-  let nl = String.lowercase_ascii notes in
-  (* Check for any 3+ char word from flag appearing in notes *)
-  let flag_tokens = tokenize fl in
-  let notes_tokens = tokenize nl in
+  let flag_tokens = tokenize (String.lowercase_ascii flag_text) in
+  let notes_tokens = tokenize (String.lowercase_ascii notes) in
   let notes_set = Hashtbl.create 32 in
   List.iter (fun t -> Hashtbl.replace notes_set t true) notes_tokens;
   let hits = List.filter (fun t -> Hashtbl.mem notes_set t) flag_tokens in
