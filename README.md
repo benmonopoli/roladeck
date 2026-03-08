@@ -22,11 +22,17 @@ Create an account with your work email. From there you can add your company name
 
 ### Connect Greenhouse
 
-Link your Greenhouse account and RolaDeck starts pulling in applications automatically. Every candidate gets scored against the relevant role playbook as they arrive. You can also score candidates manually if you want to assess someone outside of the ATS flow.
+Link your Greenhouse account and RolaDeck starts pulling in applications automatically. Every candidate is classified and scored as they arrive. You can also score candidates manually if you want to assess someone outside of the ATS flow.
+
+### AI classification
+
+When a candidate comes in, RolaDeck reads their profile and works out what they actually are — not what role they happened to apply for. Someone with a machine learning background who applied for a backend role gets classified as an ML engineer. A product marketer who started out in content gets matched against both playbooks and scored on each.
+
+This matters because most candidates don't apply for the exact role they're best suited for. Classification based on career history gives you a more accurate pool, and surfaces talent for future roles you haven't opened yet.
 
 ### Structured scoring
 
-Each role playbook has three tiers: T1 (must-haves), T2 (differentiators), T3 (rare upside). Candidates are scored across all three at whatever seniority level you're hiring for. No scoring rubrics to maintain, no spreadsheets.
+Each role playbook has three tiers: T1 (must-haves), T2 (differentiators), T3 (rare upside). Candidates are scored across all three at whatever seniority level you're hiring for. No scoring rubrics to maintain, no spreadsheets. The Score page also has a detect button — paste a profile, click detect, and it suggests the most relevant playbooks with confidence scores before you commit to scoring.
 
 ![Score a Candidate](screenshots/03-score-filled.png)
 
@@ -42,7 +48,7 @@ AI searches GitHub, conference talks, blogs, and the open web for candidates who
 
 ### Talent pool
 
-Every scored candidate is saved. When a new role opens you already have a ranked shortlist to start from. Filter by role, stage, score, and move people forward without starting from scratch.
+Every scored candidate is saved and organised by playbook. Candidates can appear under multiple playbooks if they matched more than one. Filter by category, search by name, and filter by pipeline stage within each role. When a new role opens you already have a ranked shortlist to start from.
 
 ![Talent Pool](screenshots/05-pool.png)
 
