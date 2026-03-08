@@ -14,23 +14,28 @@ Built as a multi-tenant cloud product. Each company gets an isolated workspace. 
 
 ## How it works
 
-### 1. Connect your ATS
-Link Greenhouse and RolaDeck starts pulling in applications automatically. Every candidate is scored against the relevant role playbook the moment they arrive — no manual input required.
+### 1. Set up your workspace
+Create your company account and connect your tools. RolaDeck uses your company context — industry, culture, what good looks like — to personalise AI sourcing and outreach to your specific needs.
 
-### 2. Structured scoring, not gut feel
+![Setup](screenshots/07-signup.png)
+
+### 2. Connect your ATS
+Link Greenhouse and RolaDeck starts pulling in applications automatically. Every candidate is scored against the relevant role playbook the moment they arrive — no manual input required. You can also score candidates manually if you want to evaluate someone outside the ATS flow.
+
+### 3. Structured scoring, not gut feel
 Each role playbook defines three tiers of criteria: **T1** (must-haves), **T2** (differentiators), and **T3** (rare upside signals). Candidates are scored against all three, at the seniority level you're hiring for.
 
 ![Score a Candidate](screenshots/03-score-filled.png)
 
-### 3. The model learns from your pipeline
+### 4. The model learns from your pipeline
 As candidates progress — or don't — RolaDeck tracks which signals actually correlate with success in your process. Scores recalibrate over time, so what you're measuring stays honest and company-specific rather than generic.
 
-### 4. Source the same way you score
-AI searches GitHub, conference speaker lists, blogs, and the open web to find candidates who match your playbook criteria. You get real profiles, boolean search strings for LinkedIn and GitHub, target company lists, and a ready-to-send outreach template.
+### 5. Source the same way you score
+AI searches GitHub, conference speaker lists, blogs, and the open web to find candidates who match your playbook criteria. You get real profiles, boolean search strings for LinkedIn and GitHub, target company lists, and a ready-to-send outreach template — all calibrated to your company.
 
 ![AI Sourcing](screenshots/04-ai-sourcing.png)
 
-### 5. One pool, every role
+### 6. One pool, every role
 Every scored candidate lives in a shared talent pool. When a new role opens, you already have a ranked shortlist. Search, filter by role or stage, and move candidates forward without starting from scratch.
 
 ![Talent Pool](screenshots/05-pool.png)
@@ -42,6 +47,14 @@ Every scored candidate lives in a shared talent pool. When a new role opens, you
 57 playbooks across Tech, Marketing, and Sales — each with scoring criteria, seniority signals, sourcing strings, interview stages, and red flags.
 
 ![Role Playbooks](screenshots/06-playbooks.png)
+
+---
+
+## Configure your integrations
+
+Connect your AI provider and ATS from Settings. RolaDeck supports Anthropic Claude, OpenAI, and Perplexity for AI features, and Greenhouse for ATS sync.
+
+![Settings](screenshots/08-settings.png)
 
 ---
 

@@ -1,4 +1,5 @@
 let () =
+  Mirage_crypto_rng_unix.use_default ();
   Printf.printf "ahrefs-recruit server starting on port 4000\n%!";
   Printf.printf "Skills loaded: %d\n%!"
     (List.length Ahrefs_skills_data.Skills_registry.all_skills);
