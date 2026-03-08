@@ -71,12 +71,13 @@ let make = (~onSelectCandidate: string => unit, ~onGoScore: unit => unit) => {
     Js.String.includes(~search=nd, hs);
   };
 
-  /* Build role groups: (skill_summary, list(candidate_summary)) */
+  /* Build role groups: (skill_summary, list(candidate_summary))
+     A candidate appears in every playbook bucket they matched */
   let roleGroups =
     skills
     |> List.filter_map((sk: skill_summary) => {
       let candidates = List.filter(
-        (c: candidate_summary) => c.top_role_id == sk.id,
+        (c: candidate_summary) => List.mem(sk.id, c.scored_role_ids),
         pool
       );
       List.length(candidates) > 0 ? Some((sk, candidates)) : None
@@ -203,7 +204,7 @@ let make = (~onSelectCandidate: string => unit, ~onGoScore: unit => unit) => {
   | RoleDetail(roleId, roleName) =>
     let roleCandidates =
       pool
-      |> List.filter((c: candidate_summary) => c.top_role_id == roleId)
+      |> List.filter((c: candidate_summary) => List.mem(roleId, c.scored_role_ids))
       |> (candidates => {
            let filtered = q != ""
              ? List.filter(

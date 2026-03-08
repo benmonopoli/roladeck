@@ -1,10 +1,11 @@
 open Lwt.Infix
 open Ahrefs_types.Types
 
-module Store  = Ahrefs_storage.Storage
-module GH     = Ahrefs_greenhouse.Greenhouse_client
-module Skills = Ahrefs_skills_data.Skills_registry
-module Sc     = Ahrefs_scoring.Scoring
+module Store    = Ahrefs_storage.Storage
+module GH       = Ahrefs_greenhouse.Greenhouse_client
+module Skills   = Ahrefs_skills_data.Skills_registry
+module Sc       = Ahrefs_scoring.Scoring
+module Classify = Ahrefs_ai.Classify
 
 let poll_interval_s = 300.0  (* 5 minutes *)
 
@@ -41,17 +42,6 @@ let detect_seniority title =
   else if contains_sub t "junior"   || contains_sub t "jr." then Junior
   else if contains_sub t " mid "    then Mid
   else Senior
-
-(* Find the best-matching RolaDeck playbook for a list of Greenhouse job names *)
-let find_matching_role job_names =
-  let all_names = String.concat " " job_names in
-  if String.length all_names = 0 then None
-  else
-    let results = Skills.search all_names in
-    let playbooks = List.filter is_playbook results in
-    match playbooks with
-    | s :: _ -> Some s
-    | [] -> None
 
 (* Build source text for scoring from Greenhouse candidate data *)
 let build_source_text (c : GH.gh_candidate) (app : GH.gh_application) =
@@ -94,38 +84,40 @@ let process_application ~company_id ~api_key (app : GH.gh_application) =
     | Error _ -> Lwt.return 0
     | Ok cand ->
       let source_text = build_source_text cand app in
-      let role_opt    = find_matching_role app.job_names in
       let all_title   = String.concat " " app.job_names ^ " " ^ cand.headline in
       let seniority   = detect_seniority all_title in
       let name =
         let n = String.trim (cand.first_name ^ " " ^ cand.last_name) in
         if String.length n = 0 then "Candidate" else n
       in
-      let scores = match role_opt with
-        | None -> []
-        | Some skill ->
-          let score_req : scoring_request = {
-            candidate_id    = name;
-            discipline_id   = skill.id;
-            seniority;
-            candidate_notes = source_text;
-          } in
-          let result = Sc.score_candidate skill score_req in
-          let now = Store.now_iso () in
-          let cs : candidate_score = {
-            role_id          = skill.id;
-            role_name        = skill.discipline.name;
-            seniority;
-            overall_score    = result.overall_score;
-            recommendation   = result.recommendation;
-            tier_scores      = result.tier_scores;
-            red_flags_hit    = result.red_flags_hit;
-            criterion_results= result.criterion_results;
-            scored_at        = now;
-          } in
-          [cs]
-      in
+      let%lwt cl = Classify.classify_candidate ~company_id ~candidate_notes:source_text in
       let now = Store.now_iso () in
+      let scores =
+        List.filter_map (fun (m : playbook_match) ->
+          match List.find_opt (fun (s : skill_record) -> s.id = m.playbook_id) Skills.all_skills with
+          | None -> None
+          | Some skill ->
+            let score_req : scoring_request = {
+              candidate_id    = name;
+              discipline_id   = skill.id;
+              seniority;
+              candidate_notes = source_text;
+            } in
+            let result = Sc.score_candidate skill score_req in
+            let cs : candidate_score = {
+              role_id          = skill.id;
+              role_name        = skill.discipline.name;
+              seniority;
+              overall_score    = result.overall_score;
+              recommendation   = result.recommendation;
+              tier_scores      = result.tier_scores;
+              red_flags_hit    = result.red_flags_hit;
+              criterion_results= result.criterion_results;
+              scored_at        = now;
+            } in
+            Some cs
+        ) cl.matches
+      in
       let id = Store.generate_id () in
       let gh_url = Printf.sprintf "https://app.greenhouse.io/people/%d?application_id=%d"
         cand.id app.id in

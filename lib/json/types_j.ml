@@ -381,7 +381,21 @@ let candidate_summary_to_yojson (cs : candidate_summary) =
     "top_recommendation", recommendation_tier_to_yojson cs.top_recommendation;
     "score_count",      `Int cs.score_count;
     "role_count",       `Int cs.role_count;
+    "scored_role_ids",  `List (List.map (fun s -> `String s) cs.scored_role_ids);
     "created_at",       `String cs.created_at;
+  ]
+
+let playbook_match_to_yojson (m : playbook_match) =
+  `Assoc [
+    "playbook_id",   `String m.playbook_id;
+    "playbook_name", `String m.playbook_name;
+    "confidence",    `Float m.confidence;
+    "rationale",     `String m.rationale;
+  ]
+
+let classify_result_to_yojson (r : classify_result) =
+  `Assoc [
+    "matches", `List (List.map playbook_match_to_yojson r.matches);
   ]
 
 let pool_save_request_of_yojson j =

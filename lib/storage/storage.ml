@@ -121,6 +121,7 @@ let summary_of_record (c : candidate_record) : candidate_summary =
     top_recommendation = top_rec;
     score_count = List.length c.scores;
     role_count = List.length distinct_roles;
+    scored_role_ids = distinct_roles;
     created_at = c.created_at;
   }
 

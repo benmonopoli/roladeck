@@ -7,6 +7,7 @@ module Store = Ahrefs_storage.Storage
 module Auth = Ahrefs_auth.Auth
 module AiSourcing = Ahrefs_ai.Ai_sourcing
 module CompanyResearch = Ahrefs_ai.Company_research
+module Classify = Ahrefs_ai.Classify
 module GhSync = Ahrefs_sync.Greenhouse_sync
 
 let json_response ?(status = `OK) body =
@@ -334,6 +335,33 @@ let handle_calibration req =
     let pool = Store.get_all ~company_id () in
     let cal = compute_calibration pool role_id in
     Dream.json (Yojson.Safe.to_string (role_calibration_to_yojson cal))
+
+(* ── AI Classification endpoint ── *)
+
+(* POST /api/classify *)
+let handle_classify req =
+  match require_session req with
+  | None -> Dream.respond ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let company_id = session.company_id in
+    Lwt.catch
+      (fun () ->
+        let%lwt body = Dream.body req in
+        let candidate_notes =
+          try
+            Yojson.Safe.from_string body
+            |> Yojson.Safe.Util.member "candidate_notes"
+            |> Yojson.Safe.Util.to_string
+          with _ -> ""
+        in
+        if String.length (String.trim candidate_notes) < 30 then
+          Dream.json {|{"matches":[]}|}
+        else
+          let%lwt result = Classify.classify_candidate ~company_id ~candidate_notes in
+          Dream.json (Yojson.Safe.to_string (classify_result_to_yojson result)))
+      (fun exn ->
+        json_response ~status:`Internal_Server_Error
+          (Printf.sprintf {|{"error":"%s"}|} (String.escaped (Printexc.to_string exn))))
 
 (* ── AI Sourcing endpoints ── *)
 

@@ -267,6 +267,10 @@ let decodeCandidateSummary = json => {
   top_recommendation: decodeRecommendation(getFieldExn(json, "top_recommendation")),
   score_count: decodeInt(getFieldExn(json, "score_count")),
   role_count: decodeInt(getFieldExn(json, "role_count")),
+  scored_role_ids: switch (getField(json, "scored_role_ids")) {
+    | Some(j) => decodeStringList(j)
+    | None => []
+  },
   created_at: decodeString(getFieldExn(json, "created_at")),
 };
 
@@ -788,4 +792,35 @@ let getGreenhouseSyncStatus = () =>
 let triggerGreenhouseSync = () =>
   postJson(base ++ "/api/greenhouse/sync/now", Js.Json.object_(Js.Dict.fromArray([||])))
   |> Js.Promise.then_(_ => Js.Promise.resolve());
+
+/* --- AI Classify --- */
+
+type playbookMatch = {
+  playbook_id:   string,
+  playbook_name: string,
+  confidence:    float,
+  rationale:     string,
+};
+
+let decodePlaybookMatch = json => {
+  playbook_id:   decodeString(getFieldExn(json, "playbook_id")),
+  playbook_name: decodeString(getFieldExn(json, "playbook_name")),
+  confidence:    decodeFloat(getFieldExn(json, "confidence")),
+  rationale:     decodeString(getFieldExn(json, "rationale")),
+};
+
+let classifyCandidate = (~candidateNotes) =>
+  postJson(
+    base ++ "/api/classify",
+    Js.Json.object_(Js.Dict.fromArray([|
+      ("candidate_notes", Js.Json.string(candidateNotes)),
+    |]))
+  )
+  |> Js.Promise.then_(json => {
+    let matches = switch (getField(json, "matches")) {
+      | Some(j) => decodeList(decodePlaybookMatch, j)
+      | None => []
+    };
+    Js.Promise.resolve(matches);
+  });
 

@@ -45,9 +45,10 @@ let routes = Dream.router [
   Dream.get  "/api/pool/:id"            handle_pool_get;
   Dream.put  "/api/pool/:id/stage"      handle_pool_stage;
   Dream.get  "/api/calibration/:role_id" handle_calibration;
-  (* AI Sourcing *)
-  Dream.post "/api/ai/source"   handle_ai_source;
-  Dream.get  "/api/ai/sessions" handle_ai_sessions;
+  (* AI Sourcing + Classify *)
+  Dream.post "/api/ai/source"    handle_ai_source;
+  Dream.get  "/api/ai/sessions"  handle_ai_sessions;
+  Dream.post "/api/classify"     handle_classify;
   (* Company Profile *)
   Dream.get  "/api/company/profile" handle_get_company_profile;
   Dream.post "/api/company/profile" handle_save_company_profile;

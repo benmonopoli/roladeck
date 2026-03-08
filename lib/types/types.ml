@@ -164,6 +164,7 @@ type candidate_summary = {
   top_recommendation : recommendation_tier;
   score_count : int;
   role_count : int;
+  scored_role_ids : string list;
   created_at : string;
 }
 
@@ -242,6 +243,17 @@ type ai_sourcing_result = {
   target_companies  : string list;
   outreach_template : string;
   ran_at            : string;
+}
+
+type playbook_match = {
+  playbook_id   : string;
+  playbook_name : string;
+  confidence    : float;
+  rationale     : string;
+}
+
+type classify_result = {
+  matches : playbook_match list;
 }
 
 type ai_sourcing_request = {

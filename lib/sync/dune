@@ -3,6 +3,6 @@
  (modules greenhouse_sync)
  (libraries
    ahrefs_types ahrefs_json ahrefs_storage
-   ahrefs_greenhouse ahrefs_scoring ahrefs_skills_data
-   lwt yojson unix)
+   ahrefs_greenhouse ahrefs_scoring ahrefs_skills_data ahrefs_ai
+   lwt yojson unix cohttp-lwt-unix)
  (preprocess (pps lwt_ppx)))

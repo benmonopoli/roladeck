@@ -28,6 +28,8 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
   let (urlInput, setUrlInput) = React.useState(() => "");
   let (fetchingUrl, setFetchingUrl) = React.useState(() => false);
   let (fetchMsg, setFetchMsg) = React.useState(() => None);
+  let (detecting, setDetecting) = React.useState(() => false);
+  let (suggestions, setSuggestions) = React.useState(() => []);
 
   React.useEffect0(() => {
     Ahrefs_frontend_api.Api.getSkills()
@@ -113,6 +115,24 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
         let msg = switch (Js.Json.stringifyAny(err)) { | Some(s) => s | None => "Request failed" };
         setFetchingUrl(_ => false);
         setFetchMsg(_ => Some("Could not fetch: " ++ msg));
+        Js.Promise.resolve();
+      })
+      |> ignore;
+    };
+  };
+
+  let handleDetect = _e => {
+    if (String.length(String.trim(notes)) >= 30) {
+      setDetecting(_ => true);
+      setSuggestions(_ => []);
+      Ahrefs_frontend_api.Api.classifyCandidate(~candidateNotes=notes)
+      |> Js.Promise.then_(matches => {
+        setSuggestions(_ => matches);
+        setDetecting(_ => false);
+        Js.Promise.resolve();
+      })
+      |> Js.Promise.catch(_ => {
+        setDetecting(_ => false);
         Js.Promise.resolve();
       })
       |> ignore;
@@ -293,6 +313,35 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
               className="field-input field-textarea"
             />
           </label>
+
+          <div className="detect-row">
+            <button
+              type_="button"
+              className="btn-ghost detect-btn"
+              disabled={detecting || String.length(String.trim(notes)) < 30}
+              onClick=handleDetect>
+              {React.string(detecting ? "Detecting..." : "Detect playbook")}
+            </button>
+            {suggestions != []
+              ? <div className="suggest-chips">
+                  {suggestions
+                   |> List.map((m: Ahrefs_frontend_api.Api.playbookMatch) =>
+                        <button
+                          key={m.playbook_id}
+                          type_="button"
+                          className={"suggest-chip" ++ (roleId == m.playbook_id ? " active" : "")}
+                          onClick={_ => setRoleId(_ => m.playbook_id)}>
+                          <span className="suggest-chip-name">{React.string(m.playbook_name)}</span>
+                          <span className="suggest-chip-pct">
+                            {React.string(string_of_int(int_of_float(m.confidence *. 100.0)) ++ "%")}
+                          </span>
+                        </button>
+                      )
+                   |> Array.of_list
+                   |> React.array}
+                </div>
+              : React.null}
+          </div>
 
           <button
             type_="submit"

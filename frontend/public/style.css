@@ -1516,3 +1516,42 @@ a:hover { text-decoration: underline; }
   background: transparent;
 }
 .nav-logout:hover { color: var(--orange); border-color: var(--orange); }
+
+/* Detect playbook */
+.detect-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.detect-btn {
+  align-self: flex-start;
+  font-size: 13px;
+  padding: 6px 14px;
+}
+.suggest-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.suggest-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--rule);
+  background: var(--cream);
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color .15s, background .15s;
+}
+.suggest-chip:hover {
+  border-color: var(--orange);
+  background: #fff8f4;
+}
+.suggest-chip.active {
+  border-color: var(--orange);
+  background: #fff3ec;
+}
+.suggest-chip-name { font-weight: 600; color: var(--ink); }
+.suggest-chip-pct { color: var(--orange); font-weight: 700; font-size: 12px; }
