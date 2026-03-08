@@ -81,6 +81,20 @@ Connect your AI provider and ATS from Settings. Supports Anthropic Claude, OpenA
 
 ---
 
+## Production considerations
+
+This is a working prototype built to validate the concept. A few things worth flagging before treating it as production infrastructure:
+
+**Storage.** Candidate and session data is stored as flat JSON files under `~/.ahrefs-recruit/`. Writes use atomic rename (`write to .tmp, rename into place`) which is safe for single-process use. The Greenhouse sync loop runs concurrently with user requests via cooperative multitasking, so concurrent writes to the same tenant's pool are possible under load. A proper deployment would swap the storage layer for Postgres and add a connection pool — the storage interface is isolated enough to make that a contained change.
+
+**CORS.** The API currently sends `Access-Control-Allow-Origin: *`. Fine for local dev, should be locked to the frontend origin before any public deployment.
+
+**Criterion scoring.** Candidate profiles are scored against playbook criteria using keyword matching with stop-word filtering and phrase detection. It's a solid heuristic — significantly better than naive token overlap — but it's still local text matching, not semantic understanding. The AI classification layer (which identifies what a candidate actually is) is the higher-signal part of the pipeline. The keyword scoring is most useful as a structured breakdown and as the input data for the calibration loop, where it gets better over time as real hiring outcomes accumulate.
+
+**Session expiry.** Sessions are stored indefinitely. A production build would add an expiry timestamp and a cleanup job.
+
+---
+
 ## Self-hosting
 
 ### Prerequisites
