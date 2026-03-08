@@ -91,6 +91,7 @@ let make = () => {
           setView(_ => Settings);
         }}
         onGoLogin={() => setView(_ => Login)}
+        onGoHome={() => setView(_ => Home)}
       />
     | _ =>
       <div className="app">

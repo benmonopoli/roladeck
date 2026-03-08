@@ -1495,6 +1495,13 @@ a:hover { text-decoration: underline; }
   padding: 10px 12px;
   margin-bottom: 16px;
 }
+.auth-back {
+  display: inline-flex; align-items: center;
+  font-size: 13px; color: var(--ink-3); font-weight: 500;
+  background: none; border: none; padding: 0;
+  cursor: pointer; margin-bottom: 20px;
+}
+.auth-back:hover { color: var(--orange); }
 .auth-switch {
   font-size: 13px; color: var(--ink-2);
   margin-top: 20px; text-align: center;
