@@ -201,6 +201,7 @@ let make = () => {
                onBack={() => setView(_ => RoleGuide(""))}
                onScore={id_ => setView(_ => Score(Some(id_)))}
                onSelectCandidate={cid => setView(_ => CandidateDetail(cid))}
+               isAnonymous
              />
            | Resources =>
              <Components.SkillsBrowser
@@ -213,6 +214,7 @@ let make = () => {
                onBack={() => setView(_ => Resources)}
                onScore={id_ => setView(_ => Score(Some(id_)))}
                onSelectCandidate={cid => setView(_ => CandidateDetail(cid))}
+               isAnonymous
              />
            | AiSourcing =>
              isAnonymous ? authGate("AI Sourcing") :

@@ -3,7 +3,7 @@ open Ahrefs_types.Types;
 type tab = Guide | Score | Source | Pool;
 
 [@react.component]
-let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: string => unit, ~onSelectCandidate: string => unit) => {
+let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: string => unit, ~onSelectCandidate: string => unit, ~isAnonymous: bool) => {
   /* ── Skill data ── */
   let (skill, setSkill) = React.useState(() => None);
   let (loading, setLoading) = React.useState(() => true);
@@ -313,7 +313,7 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
               <tbody>
                 {s.comp_ranges
                  |> List.map(cr =>
-                      <tr key={cr.level == Junior ? "j" : "x"}>
+                      <tr key={seniorityLabel(cr.level)}>
                         <td>{React.string(seniorityLabel(cr.level))}</td>
                         <td>{React.string(
                           "$" ++ string_of_int(cr.base_min / 1000) ++ "k - $" ++
@@ -672,21 +672,24 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
             onClick={_ => setTab(_ => Guide)}>
             {React.string("Hiring Guide")}
           </button>
-          <button
-            className={"role-tab " ++ (tab == Score ? "active" : "")}
-            onClick={_ => setTab(_ => Score)}>
-            {React.string("Score a Candidate")}
-          </button>
-          <button
-            className={"role-tab " ++ (tab == Source ? "active" : "")}
-            onClick={_ => setTab(_ => Source)}>
-            {React.string("Find Candidates")}
-          </button>
-          <button
-            className={"role-tab " ++ (tab == Pool ? "active" : "")}
-            onClick={_ => setTab(_ => Pool)}>
-            {React.string("Matched Candidates")}
-          </button>
+          {isAnonymous ? React.null :
+            <button
+              className={"role-tab " ++ (tab == Score ? "active" : "")}
+              onClick={_ => setTab(_ => Score)}>
+              {React.string("Score a Candidate")}
+            </button>}
+          {isAnonymous ? React.null :
+            <button
+              className={"role-tab " ++ (tab == Source ? "active" : "")}
+              onClick={_ => setTab(_ => Source)}>
+              {React.string("Find Candidates")}
+            </button>}
+          {isAnonymous ? React.null :
+            <button
+              className={"role-tab " ++ (tab == Pool ? "active" : "")}
+              onClick={_ => setTab(_ => Pool)}>
+              {React.string("Matched Candidates")}
+            </button>}
         </div>
 
         <div className="role-tab-body">

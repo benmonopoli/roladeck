@@ -50,23 +50,90 @@ let extract_frontmatter_field field content =
       Some v
     with Not_found -> None
 
-(** Parse seniority level from string *)
-let parse_seniority_level s =
-  let s = String.lowercase_ascii (String.trim s) in
+(** Substring check — both strings already lowercase *)
+let str_contains s sub =
+  let ns = String.length s and nsub = String.length sub in
+  if nsub = 0 then true
+  else if nsub > ns then false
+  else
+    let rec check i =
+      if i > ns - nsub then false
+      else if String.sub s i nsub = sub then true
+      else check (i + 1)
+    in check 0
+
+(** Keyword-based seniority fallback (s already lowercase, trimmed, no parens) *)
+let seniority_keyword_match s =
+  let sw p =
+    let np = String.length p in
+    String.length s >= np && String.sub s 0 np = p
+  in
+  if sw "senior " then Some Senior
+  else if sw "vp " || sw "vp+" || sw "chief " then Some VP
+  else if sw "head " then Some Director
+  else if sw "director " then Some Director
+  else if sw "junior " || sw "entry " then Some Junior
+  else if sw "principal " then Some Principal
+  else if sw "staff " then Some Staff
+  else if sw "associate " || sw "coordinator " || sw "specialist " then Some Coordinator
+  else if str_contains s " manager" || sw "manager " then Some Manager
+  else if str_contains s " director" then Some Director
+  else if str_contains s "account executive" then Some Mid
+  else if str_contains s "sdr" || str_contains s "bdr" then Some Junior
+  else if str_contains s "csm" then Some Mid
+  else if str_contains s " ae" then Some Mid
+  else if str_contains s "solutions engineer" then Some Mid
+  else if str_contains s "inside sales" then Some Junior
+  else if str_contains s " specialist" then Some Coordinator
+  else if str_contains s "representative" then Some Coordinator
+  else None
+
+(** Parse seniority level — handles non-standard/compound labels recursively *)
+let rec parse_seniority_level_aux s =
   match s with
-  | "junior" -> Some Junior
+  | "junior" | "entry" -> Some Junior
   | "mid" -> Some Mid
   | "senior" -> Some Senior
   | "staff" | "staff+" -> Some Staff
   | "principal" | "principal / distinguished" -> Some Principal
-  | "coordinator" -> Some Coordinator
+  | "coordinator" | "associate" | "specialist" | "analyst" -> Some Coordinator
   | "manager" -> Some Manager
-  | "senior manager" -> Some SeniorManager
-  | "director" -> Some Director
-  | "vp" -> Some VP
+  | "senior manager" | "lead" | "team lead" -> Some SeniorManager
+  | "director" | "head" -> Some Director
+  | "vp" | "vp+" | "exec" | "c-suite" -> Some VP
   | "cmo" -> Some CMO
   | "cro" -> Some CRO
-  | _ -> None
+  | "sdr" | "bdr" | "sdr / bdr" -> Some Junior
+  | "csm" | "ae" | "se" -> Some Mid
+  | _ ->
+    (* Strip trailing + e.g. "Staff+" → "Staff" *)
+    let s_noplus =
+      if String.length s > 1 && s.[String.length s - 1] = '+'
+      then String.sub s 0 (String.length s - 1)
+      else s
+    in
+    if s_noplus <> s then parse_seniority_level_aux s_noplus
+    else
+      (* Strip parentheticals: "Manager (PMM)" → "Manager" *)
+      let s_noparen =
+        String.trim (Str.global_replace (Str.regexp " *([^)]*)") "" s)
+      in
+      if s_noparen <> s then parse_seniority_level_aux s_noparen
+      else
+        (* Split "X / Y" compound — recurse on first part *)
+        (match String.split_on_char '/' s with
+        | first :: _ :: _ ->
+          let first = String.trim first in
+          (match parse_seniority_level_aux first with
+          | Some _ as r -> r
+          | None -> seniority_keyword_match s)
+        | _ -> seniority_keyword_match s)
+
+let parse_seniority_level s =
+  let s = String.lowercase_ascii (String.trim s) in
+  let s = Str.global_replace (Str.regexp "\\*\\*") "" s in
+  let s = String.trim s in
+  parse_seniority_level_aux s
 
 (** Parse a tier bullet point like "- Python for data pipelines..." *)
 let parse_criterion_line tier line =
