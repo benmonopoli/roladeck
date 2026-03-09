@@ -206,9 +206,7 @@ a:hover { text-decoration: underline; }
 }
 .callout-sticky {
   display: inline-flex; flex-direction: column; gap: 8px;
-  background:
-    radial-gradient(circle at 100% 100%, rgba(28,23,20,.20) 0%, rgba(28,23,20,.05) 36%, transparent 54%),
-    var(--yellow);
+  background: var(--yellow);
   padding: 22px 18px 16px;
   border-radius: var(--radius-xs);
   box-shadow: 3px 5px 14px rgba(28,23,20,.18), 0 1px 2px rgba(28,23,20,.08);
@@ -227,19 +225,6 @@ a:hover { text-decoration: underline; }
   border-radius: 2px;
   box-shadow: 0 1px 3px rgba(0,0,0,.12);
   z-index: 1;
-}
-/* Curled corner on sticky note */
-.callout-sticky::after {
-  content: '';
-  position: absolute;
-  bottom: 0; right: 0;
-  width: 52px; height: 52px;
-  /* Clean triangle — the lifted flap showing back of paper */
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-  /* Gradient: light off-white at corner tip (most lifted), getting shadowy toward the fold diagonal */
-  background: linear-gradient(315deg, #f4edd8 0%, #ddd0ac 55%, #c6b88a 100%);
-  filter: drop-shadow(-3px -3px 8px rgba(28,23,20,.38));
-  z-index: 3;
 }
 .callout-sticky-text { font-size: 13px; color: var(--ink); line-height: 1.4; }
 .callout-sticky-btn {
