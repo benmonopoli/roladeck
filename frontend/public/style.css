@@ -231,14 +231,17 @@ a:hover { text-decoration: underline; }
   content: '';
   position: absolute;
   bottom: 0; right: 0;
-  width: 26px; height: 26px;
+  width: 44px; height: 44px;
   background: linear-gradient(
-    -45deg,
-    var(--cream) 44%,
-    rgba(28,23,20,.14) 50%,
-    var(--yellow) 56%
+    225deg,
+    #ede4c8 0%,              /* back of paper — slightly cool cream */
+    #e5dab8 30%,             /* back of paper darkening toward fold */
+    rgba(28,23,20,.28) 37%,  /* dark crease right at the fold */
+    rgba(28,23,20,.07) 44%,  /* shadow fading back onto note surface */
+    transparent 52%          /* transparent — note yellow shows through */
   );
   border-bottom-right-radius: var(--radius-xs);
+  filter: drop-shadow(-3px -3px 5px rgba(28,23,20,.20));
   z-index: 2;
 }
 .callout-sticky-text { font-size: 13px; color: var(--ink); line-height: 1.4; }
