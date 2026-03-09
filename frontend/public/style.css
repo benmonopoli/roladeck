@@ -83,7 +83,7 @@ a:hover { text-decoration: underline; }
 
 /* ── App Shell ── */
 
-.app { display: flex; flex-direction: column; min-height: 100vh; }
+.app { display: flex; flex-direction: column; min-height: 100vh; position: relative; }
 
 .app-header {
   position: sticky; top: 0; z-index: 100;
@@ -225,6 +225,21 @@ a:hover { text-decoration: underline; }
   border-radius: 2px;
   box-shadow: 0 1px 3px rgba(0,0,0,.12);
   z-index: 1;
+}
+/* Curled corner on sticky note */
+.callout-sticky::after {
+  content: '';
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 26px; height: 26px;
+  background: linear-gradient(
+    -45deg,
+    var(--cream) 44%,
+    rgba(28,23,20,.14) 50%,
+    var(--yellow) 56%
+  );
+  border-bottom-right-radius: var(--radius-xs);
+  z-index: 2;
 }
 .callout-sticky-text { font-size: 13px; color: var(--ink); line-height: 1.4; }
 .callout-sticky-btn {
@@ -1578,47 +1593,23 @@ a:hover { text-decoration: underline; }
 .tier-score-row:nth-child(2) .tier-bar-fill { animation-delay: 0.36s; }
 .tier-score-row:nth-child(3) .tier-bar-fill { animation-delay: 0.52s; }
 
-/* Hole punches — left margin binder */
-.app-main::before {
+/* Hole punches — scrolling left margin binder */
+.app::before {
   content: '';
-  position: fixed;
-  left: 22px; top: 50%;
-  transform: translateY(-50%);
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: var(--cream-deep);
-  box-shadow:
-    0 0 0 1.5px rgba(140,124,108,.38),
-    inset 0 1px 3px rgba(0,0,0,.10),
-    0   88px 0 0   var(--cream-deep),
-    0   88px 0 1.5px rgba(140,124,108,.38),
-    0  -88px 0 0   var(--cream-deep),
-    0  -88px 0 1.5px rgba(140,124,108,.38);
+  position: absolute;
+  left: 22px; top: 0; bottom: 0;
+  width: 13px;
+  background:
+    radial-gradient(circle at center,
+      var(--cream-deep) 5.5px,
+      rgba(140,124,108,.40) 5.5px,
+      rgba(140,124,108,.40) 7px,
+      transparent 7px
+    ) center 100px / 13px 280px repeat-y;
   pointer-events: none;
   z-index: 2;
 }
-@media (max-width: 900px) { .app-main::before { display: none; } }
-
-/* Coffee ring stain — desk atmosphere */
-.app::before {
-  content: '';
-  position: fixed;
-  bottom: 56px; right: 68px;
-  width: 104px; height: 92px;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse,
-    transparent 37%,
-    rgba(155,105,65,.06) 39%,
-    rgba(155,105,65,.14) 43%,
-    rgba(155,105,65,.17) 46%,
-    rgba(155,105,65,.10) 49%,
-    rgba(155,105,65,.03) 51%,
-    transparent 53%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
+@media (max-width: 900px) { .app::before { display: none; } }
 
 /* Perforated divider between score columns */
 .score-form-layout { position: relative; }
