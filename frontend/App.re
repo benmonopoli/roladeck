@@ -55,16 +55,14 @@ let make = () => {
     <div className="auth-gate">
       <div className="auth-gate-note">
         <p className="auth-gate-note-text">
-          {React.string("You need an account to access this.")}
-        </p>
-        <p className="auth-gate-note-actions">
           <button className="auth-gate-hl auth-gate-hl-pink" onClick={_ => setView(_ => Login)}>
             {React.string("Sign in")}
           </button>
-          {React.string({js| · |js})}
+          {React.string(" or ")}
           <button className="auth-gate-hl auth-gate-hl-blue" onClick={_ => setView(_ => Signup)}>
-            {React.string("Set up your company")}
+            {React.string("set up your company")}
           </button>
+          {React.string(" to continue.")}
         </p>
       </div>
     </div>;
