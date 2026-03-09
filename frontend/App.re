@@ -51,6 +51,22 @@ let make = () => {
 
   let isAnonymous = switch (authState) { | Anonymous => true | _ => false };
 
+  let authGate = pageName =>
+    <div className="auth-gate">
+      <p className="auth-gate-eyebrow">{React.string(pageName)}</p>
+      <h2 className="auth-gate-title">{React.string("Sign in to continue")}</h2>
+      <p className="auth-gate-msg">
+        {React.string("You need an account to access this feature.")}
+      </p>
+      <button className="btn-primary" onClick={_ => setView(_ => Login)}>
+        {React.string("Sign in")}
+      </button>
+      <span className="auth-gate-or">{React.string("or")}</span>
+      <button className="auth-gate-signup-link" onClick={_ => setView(_ => Signup)}>
+        {React.string("Set up your company")}
+      </button>
+    </div>;
+
   let handleLogout = _ => {
     Ahrefs_frontend_api.Api.logout()
     |> Js.Promise.then_(_ => {
@@ -149,16 +165,19 @@ let make = () => {
                isAnonymous
              />
            | Pool =>
+             isAnonymous ? authGate("Talent Pool") :
              <Components.Pool
                onSelectCandidate={id => setView(_ => CandidateDetail(id))}
                onGoScore={() => setView(_ => Score(None))}
              />
            | Score(initialRole) =>
+             isAnonymous ? authGate("Score a Candidate") :
              <Components.ScoreForm
                initialRoleId=initialRole
                onSaved={id => setView(_ => CandidateDetail(id))}
              />
            | CandidateDetail(id) =>
+             isAnonymous ? authGate("Candidate Detail") :
              <Components.CandidateDetail
                candidateId=id
                onSelectRole={roleId => setView(_ => RoleGuide(roleId))}
@@ -180,8 +199,12 @@ let make = () => {
                onSelectSkill={id => setView(_ => RoleGuide(id))}
                playbooks_only=false
              />
-           | AiSourcing => <Components.AiSourcing />
-           | Settings => <Components.Settings />
+           | AiSourcing =>
+             isAnonymous ? authGate("AI Sourcing") :
+             <Components.AiSourcing />
+           | Settings =>
+             isAnonymous ? authGate("Settings") :
+             <Components.Settings />
            | Login => React.null
            | Signup => React.null
            }}
