@@ -55,6 +55,7 @@ let make = () => {
     <div className="auth-gate">
       <div className="auth-gate-note">
         <p className="auth-gate-note-text">
+          {React.string("You need an account to access this feature. ")}
           <button className="auth-gate-hl auth-gate-hl-pink" onClick={_ => setView(_ => Login)}>
             {React.string("Sign in")}
           </button>
