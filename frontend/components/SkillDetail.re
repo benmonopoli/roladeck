@@ -3,7 +3,7 @@ open Ahrefs_types.Types;
 type tab = Guide | Score | Source | Pool;
 
 [@react.component]
-let make = (~skillId: string, ~onBack as _onBack: unit => unit, ~onScore as _onScore: string => unit, ~onSelectCandidate: string => unit) => {
+let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: string => unit, ~onSelectCandidate: string => unit) => {
   /* ── Skill data ── */
   let (skill, setSkill) = React.useState(() => None);
   let (loading, setLoading) = React.useState(() => true);
@@ -659,6 +659,9 @@ let make = (~skillId: string, ~onBack as _onBack: unit => unit, ~onScore as _onS
     | Some(s) =>
       <div className="role-hub">
         <div className="role-hub-head">
+          <button className="back-link" onClick={_ => onBack()}>
+            {React.string({js|← Back|js})}
+          </button>
           <div className="role-hub-name">{React.string(s.discipline.name)}</div>
           <div className="role-hub-desc">{React.string(s.discipline.description)}</div>
         </div>

@@ -5,6 +5,7 @@ type view =
   | CandidateDetail(string)
   | RoleGuide(string)
   | Resources
+  | ResourceDetail(string)
   | AiSourcing
   | Settings
   | Login
@@ -42,9 +43,15 @@ let make = () => {
     None;
   });
 
+  let isActiveView = v => switch (v, view) {
+    | (Resources, Resources) | (Resources, ResourceDetail(_)) => true
+    | (RoleGuide(""), RoleGuide(_)) => true
+    | _ => v == view
+  };
+
   let navItem = (label, current, target) =>
     <button
-      className={"nav-link " ++ (view == current ? "active" : "")}
+      className={"nav-link " ++ (isActiveView(current) ? "active" : "")}
       onClick={_ => setView(_ => target)}>
       {React.string(label)}
     </button>;
@@ -197,8 +204,15 @@ let make = () => {
              />
            | Resources =>
              <Components.SkillsBrowser
-               onSelectSkill={id => setView(_ => RoleGuide(id))}
+               onSelectSkill={id => setView(_ => ResourceDetail(id))}
                playbooks_only=false
+             />
+           | ResourceDetail(id) =>
+             <Components.SkillDetail
+               skillId=id
+               onBack={() => setView(_ => Resources)}
+               onScore={id_ => setView(_ => Score(Some(id_)))}
+               onSelectCandidate={cid => setView(_ => CandidateDetail(cid))}
              />
            | AiSourcing =>
              isAnonymous ? authGate("AI Sourcing") :
