@@ -114,11 +114,13 @@ let make = (~onSelectSkill: string => unit, ~playbooks_only: bool) => {
              |> List.map((skill: skill_summary) =>
                   <button
                     key={skill.id}
-                    className={"role-card " ++ catColor(skill.category)}
+                    className={"role-card " ++ (playbooks_only ? catColor(skill.category) : "")}
                     onClick={_ => onSelectSkill(skill.id)}>
-                    <div className="role-card-cat">
-                      {React.string(catLabel(skill.category))}
-                    </div>
+                    {playbooks_only
+                      ? <div className="role-card-cat">
+                          {React.string(catLabel(skill.category))}
+                        </div>
+                      : React.null}
                     <div className="role-card-name">{React.string(skill.name)}</div>
                     <div className="role-card-desc">
                       {React.string(
