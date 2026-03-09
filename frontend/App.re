@@ -51,20 +51,21 @@ let make = () => {
 
   let isAnonymous = switch (authState) { | Anonymous => true | _ => false };
 
-  let authGate = pageName =>
+  let authGate = _pageName =>
     <div className="auth-gate">
-      <p className="auth-gate-eyebrow">{React.string(pageName)}</p>
-      <h2 className="auth-gate-title">{React.string("Sign in to continue")}</h2>
-      <p className="auth-gate-msg">
-        {React.string("You need an account to access this feature.")}
-      </p>
-      <button className="btn-primary" onClick={_ => setView(_ => Login)}>
-        {React.string("Sign in")}
-      </button>
-      <span className="auth-gate-or">{React.string("or")}</span>
-      <button className="auth-gate-signup-link" onClick={_ => setView(_ => Signup)}>
-        {React.string("Set up your company")}
-      </button>
+      <div className="auth-gate-note">
+        <p className="auth-gate-note-text">
+          {React.string("You need an account to access this feature — ")}
+          <button className="auth-gate-hl" onClick={_ => setView(_ => Login)}>
+            {React.string("sign in")}
+          </button>
+          {React.string(" or ")}
+          <button className="auth-gate-hl auth-gate-hl-alt" onClick={_ => setView(_ => Signup)}>
+            {React.string("set up your company")}
+          </button>
+          {React.string(" to continue.")}
+        </p>
+      </div>
     </div>;
 
   let handleLogout = _ => {
