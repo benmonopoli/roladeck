@@ -34,9 +34,9 @@ let make = (
   <div className="home">
     <div className="home-hero">
       <h1 className="home-hero-title">
-        {"Recruiting," |> React.string}
+        <span className="hero-line-1">{React.string("Recruiting,")}</span>
         <br />
-        {"on deck." |> React.string}
+        <span className="hero-line-2">{React.string("on deck.")}</span>
       </h1>
       <p className="home-hero-sub">
         {"Score candidates. Source talent. Build your pipeline." |> React.string}

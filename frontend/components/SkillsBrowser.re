@@ -133,7 +133,7 @@ let make = (~onSelectSkill: string => unit, ~playbooks_only: bool) => {
                             {React.string(string_of_int(skill.criteria_count) ++ " criteria")}
                           </span>
                         : React.null}
-                      <span className="role-card-arrow">{">" |> React.string}</span>
+                      <span className="role-card-arrow">{React.string({js|→|js})}</span>
                     </div>
                   </button>
                 )

@@ -192,7 +192,7 @@ let make = (~onSelectCandidate: string => unit, ~onGoScore: unit => unit) => {
                           </span>
                         </div>
                         <div className="role-card-meta">
-                          <span className="role-card-arrow">{">" |> React.string}</span>
+                          <span className="role-card-arrow">{React.string({js|→|js})}</span>
                         </div>
                       </button>
                     })
@@ -222,7 +222,7 @@ let make = (~onSelectCandidate: string => unit, ~onGoScore: unit => unit) => {
       <div className="page-header">
         <div className="page-header-left">
           <button className="back-link" onClick={_ => { setView(_ => Cards); setQ(_ => ""); setStageFilter(_ => None); }}>
-            {React.string("< Talent Pool")}
+            {React.string({js|← Talent Pool|js})}
           </button>
           <h1 className="page-title">{React.string(roleName)}</h1>
           <p className="page-subtitle">
@@ -298,7 +298,12 @@ let make = (~onSelectCandidate: string => unit, ~onGoScore: unit => unit) => {
                     key={c.id}
                     className="pool-row"
                     onClick={_ => onSelectCandidate(c.id)}>
-                    <span className="pool-row-name">{React.string(c.name)}</span>
+                    <span className="pool-row-name">
+                      {List.length(c.scored_role_ids) > 1
+                        ? <span className="pool-clip" title="Matched multiple playbooks" />
+                        : React.null}
+                      {React.string(c.name)}
+                    </span>
                     <span className="pool-row-score">
                       <span className="score-bar-wrap">
                         <span

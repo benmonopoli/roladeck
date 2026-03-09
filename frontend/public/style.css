@@ -1562,3 +1562,191 @@ a:hover { text-decoration: underline; }
 }
 .suggest-chip-name { font-weight: 600; color: var(--ink); }
 .suggest-chip-pct { color: var(--orange); font-weight: 700; font-size: 12px; }
+
+/* ── Design Enhancements ── */
+
+/* Score bar entrance animation */
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.tier-bar-fill {
+  transform-origin: left center;
+  animation: barGrow 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.tier-score-row:nth-child(1) .tier-bar-fill { animation-delay: 0.20s; }
+.tier-score-row:nth-child(2) .tier-bar-fill { animation-delay: 0.36s; }
+.tier-score-row:nth-child(3) .tier-bar-fill { animation-delay: 0.52s; }
+
+/* Hole punches — left margin binder */
+.app-main::before {
+  content: '';
+  position: fixed;
+  left: 22px; top: 50%;
+  transform: translateY(-50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--cream-dark);
+  box-shadow:
+    0 0 0 1.5px rgba(140,124,108,.28),
+    0  52px 0 0   var(--cream-dark),
+    0  52px 0 1.5px rgba(140,124,108,.28),
+    0 -52px 0 0   var(--cream-dark),
+    0 -52px 0 1.5px rgba(140,124,108,.28);
+  pointer-events: none;
+  z-index: 2;
+}
+@media (max-width: 900px) { .app-main::before { display: none; } }
+
+/* Coffee ring stain — desk atmosphere */
+.app::before {
+  content: '';
+  position: fixed;
+  bottom: 44px; right: 54px;
+  width: 86px; height: 86px;
+  border-radius: 50%;
+  border: 3px solid rgba(140,100,70,.065);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(140,100,70,.04),
+    0 0 0 1px rgba(140,100,70,.03);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Perforated divider between score columns */
+.score-form-layout { position: relative; }
+.score-form-layout::before {
+  content: '';
+  position: absolute;
+  left: calc(50% - 1px); top: 0; bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(140,124,108,.28) 0,
+    rgba(140,124,108,.28) 5px,
+    transparent 5px,
+    transparent 9px
+  );
+  pointer-events: none;
+}
+@media (max-width: 800px) { .score-form-layout::before { display: none; } }
+
+/* Rubber stamp — strong progress + hired */
+@keyframes stampIn {
+  0%   { transform: scale(1.7) rotate(-4deg); opacity: 0; filter: blur(1px); }
+  55%  { transform: scale(0.93) rotate(1.2deg); opacity: 1; filter: blur(0); }
+  75%  { transform: scale(1.04) rotate(-0.5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.rec-badge.rec-green { animation: stampIn 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.stage-pill.stage-hired { animation: stampIn 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+/* Met criteria row — subtle green tint */
+.check-row.met {
+  background: rgba(46,125,50,.04);
+  border-radius: var(--radius-xs);
+  padding-left: 8px; padding-right: 6px;
+  margin-left: -8px; margin-right: -6px;
+}
+
+/* Paper clip — candidate matched multiple playbooks */
+.pool-clip {
+  display: inline-block;
+  position: relative;
+  width: 10px; height: 18px;
+  vertical-align: middle;
+  margin-right: 7px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.pool-clip::before {
+  content: '';
+  position: absolute;
+  width: 8px; height: 14px;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 4px 4px 0 0;
+  border-bottom: none;
+  top: 0; left: 1px;
+}
+.pool-clip::after {
+  content: '';
+  position: absolute;
+  width: 11px; height: 10px;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 3px 3px 0 0;
+  border-bottom: none;
+  top: 3px; left: -1px;
+}
+
+/* Pool — binder tab category filters */
+.pool-view .picker-controls { margin-bottom: 0; }
+.pool-view .cat-filters {
+  display: flex; gap: 3px; flex-wrap: wrap;
+  align-items: flex-end;
+  border-bottom: 2px solid var(--rule);
+  margin-bottom: 28px;
+}
+.pool-view .cat-btn {
+  padding: 6px 16px 9px;
+  font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--rule); border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--ink-3); background: var(--cream-dark);
+  transition: color .12s, background .12s;
+  position: relative; margin-bottom: -2px;
+}
+.pool-view .cat-btn:hover { color: var(--ink); background: var(--cream); }
+.pool-view .cat-btn.active {
+  color: var(--ink); background: var(--white);
+  border-color: var(--rule); z-index: 1;
+}
+.pool-view .cat-btn.active::after {
+  content: ''; position: absolute;
+  bottom: -3px; left: -1px; right: -1px;
+  height: 5px; background: var(--white);
+}
+.pool-view .cat-btn.cat-tech.active      { border-top: 2.5px solid #214A6E; color: #214A6E; }
+.pool-view .cat-btn.cat-marketing.active { border-top: 2.5px solid #7A3B1E; color: #7A3B1E; }
+.pool-view .cat-btn.cat-sales.active     { border-top: 2.5px solid #25593A; color: #25593A; }
+
+/* Role card arrow — slide right on hover */
+.role-card-arrow { transition: transform .18s; display: inline-block; }
+.role-card:hover .role-card-arrow { transform: translateX(4px); }
+
+/* Adding machine tape numbers */
+.home-stats-pill strong {
+  font-family: 'Space Mono', monospace;
+  font-size: 15px; letter-spacing: -.02em;
+}
+
+/* Typewriter hero reveal */
+@keyframes revealLine {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0%   0 0); }
+}
+@keyframes cursorBlink {
+  from { opacity: 1; }
+  50%  { opacity: 0; }
+  to   { opacity: 0; }
+}
+.hero-line-1, .hero-line-2 {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.hero-line-1 { animation: revealLine 0.80s steps(12, end) 0.20s both; }
+.hero-line-2 { animation: revealLine 0.60s steps( 9, end) 1.10s both; }
+.home-hero-title::after {
+  content: '';
+  display: inline-block;
+  width: 4px; height: 0.78em;
+  background: var(--orange);
+  vertical-align: text-bottom;
+  margin-left: 5px;
+  opacity: 0;
+  animation: cursorBlink 0.5s step-end 1.8s 6 forwards;
+}
+@media (max-width: 600px) {
+  .hero-line-1, .hero-line-2 { animation: none; white-space: normal; }
+  .home-hero-title::after { display: none; }
+}

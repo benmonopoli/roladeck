@@ -29,7 +29,7 @@ let make = (~onLogin: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoSignup: uni
   <div className="auth-wrap">
     <div className="auth-card">
       <button className="auth-back" onClick={_ => onGoHome()}>
-        {React.string("< Back")}
+        {React.string({js|← Back|js})}
       </button>
       <div className="brand-row">
         <span className="brand-mark">
