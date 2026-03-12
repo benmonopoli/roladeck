@@ -822,6 +822,7 @@ type companyProfile = {
   company_urls:       list(string),
   company_brief:      string,
   brief_generated_at: option(string),
+  pool_lookback:      option(string),
 };
 
 let decodeCompanyProfile = (json) : companyProfile => {
@@ -832,6 +833,10 @@ let decodeCompanyProfile = (json) : companyProfile => {
     | Some(j) => switch (Js.Json.decodeString(j)) { | Some(s) => Some(s) | None => None }
     | None => None
   },
+  pool_lookback: switch (getField(json, "pool_lookback")) {
+    | Some(j) => switch (Js.Json.decodeString(j)) { | Some(s) => Some(s) | None => None }
+    | None => None
+  },
 };
 
 let getCompanyProfile = () : Js.Promise.t(companyProfile) =>
@@ -839,6 +844,18 @@ let getCompanyProfile = () : Js.Promise.t(companyProfile) =>
   |> Js.Promise.then_(json =>
     Js.Promise.resolve(decodeCompanyProfile(json))
   );
+
+let savePoolSettings = (~lookback: option(string)) =>
+  postJson(
+    base ++ "/api/company/pool-settings",
+    Js.Json.object_(Js.Dict.fromArray([|
+      ("pool_lookback", switch(lookback) {
+        | None => Js.Json.null
+        | Some(s) => Js.Json.string(s)
+      }),
+    |]))
+  )
+  |> Js.Promise.then_(_ => Js.Promise.resolve());
 
 let saveAndResearchCompany = (~name, ~urls: list(string)) =>
   postJson(

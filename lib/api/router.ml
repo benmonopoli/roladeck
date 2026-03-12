@@ -57,8 +57,9 @@ let routes = Dream.router [
   Dream.get  "/api/ai/sessions"  handle_ai_sessions;
   Dream.post "/api/classify"     handle_classify;
   (* Company Profile *)
-  Dream.get  "/api/company/profile" handle_get_company_profile;
-  Dream.post "/api/company/profile" handle_save_company_profile;
+  Dream.get  "/api/company/profile"       handle_get_company_profile;
+  Dream.post "/api/company/profile"       handle_save_company_profile;
+  Dream.post "/api/company/pool-settings" handle_save_pool_settings;
   (* URL fetcher *)
   Dream.post "/api/fetch-url" handle_fetch_url;
   (* Settings *)

@@ -641,9 +641,8 @@ let company_profile_to_yojson (p : company_profile) =
     "company_name",       `String p.company_name;
     "company_urls",       `List (List.map (fun s -> `String s) p.company_urls);
     "company_brief",      `String p.company_brief;
-    "brief_generated_at", (match p.brief_generated_at with
-                           | None -> `Null
-                           | Some s -> `String s);
+    "brief_generated_at", (match p.brief_generated_at with None -> `Null | Some s -> `String s);
+    "pool_lookback",      (match p.pool_lookback with None -> `Null | Some s -> `String s);
   ]
 
 let company_profile_of_yojson j =
@@ -658,7 +657,12 @@ let company_profile_of_yojson j =
     | Ok (`String s) -> Some s
     | _ -> None
   in
-  Ok { company_name; company_urls; company_brief; brief_generated_at }
+  let pool_lookback =
+    match field j "pool_lookback" with
+    | Ok (`String s) -> Some s
+    | _ -> None
+  in
+  Ok { company_name; company_urls; company_brief; brief_generated_at; pool_lookback }
 
 let ai_sourcing_request_of_yojson j =
   let open Result in

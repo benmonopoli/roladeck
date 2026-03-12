@@ -245,7 +245,12 @@ let handle_pool_list req =
       match Yojson.Safe.from_string (Printf.sprintf {|"%s"|} s) |> ats_stage_of_yojson with
       | Ok st -> st | Error _ -> Screening
     ) in
-    let summaries = Store.get_summaries ~company_id ~role_id ~stage ~q () in
+    let lookback =
+      match Store.load_company_profile ~company_id () with
+      | None -> None
+      | Some p -> p.pool_lookback
+    in
+    let summaries = Store.get_summaries ~company_id ~role_id ~stage ~q ~lookback () in
     let json = `List (List.map candidate_summary_to_yojson summaries) in
     Dream.json (Yojson.Safe.to_string json)
 
@@ -537,7 +542,7 @@ let handle_get_company_profile req =
     (match Store.load_company_profile ~company_id () with
      | None ->
        Dream.json (Yojson.Safe.to_string (company_profile_to_yojson {
-         company_name = ""; company_urls = []; company_brief = ""; brief_generated_at = None;
+         company_name = ""; company_urls = []; company_brief = ""; brief_generated_at = None; pool_lookback = None;
        }))
      | Some p ->
        Dream.json (Yojson.Safe.to_string (company_profile_to_yojson p)))
@@ -563,7 +568,7 @@ let handle_save_company_profile req =
          (Printf.sprintf {|{"error":"invalid request: %s"}|} e)
      | Ok (company_name, company_urls) ->
        let existing = Store.load_company_profile ~company_id ()
-         |> Option.value ~default:{ company_name = ""; company_urls = []; company_brief = ""; brief_generated_at = None } in
+         |> Option.value ~default:{ company_name = ""; company_urls = []; company_brief = ""; brief_generated_at = None; pool_lookback = None } in
        let profile = { existing with company_name; company_urls } in
        Store.save_company_profile ~company_id profile;
        (* Fire async research job — does not block *)
@@ -574,6 +579,22 @@ let handle_save_company_profile req =
            | Error e -> Printf.eprintf "Company research error: %s\n%!" e)
        );
        Dream.json {|{"status":"researching"}|})
+
+let handle_save_pool_settings req =
+  match require_session req with
+  | None -> json_response ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let%lwt body = Dream.body req in
+    let json = Yojson.Safe.from_string body in
+    let lookback = match Yojson.Safe.Util.member "pool_lookback" json with
+      | `String s -> Some s | `Null -> None | _ -> None
+    in
+    let existing = Store.load_company_profile ~company_id:session.company_id ()
+      |> Option.value ~default:{ company_name = ""; company_urls = []; company_brief = "";
+                                  brief_generated_at = None; pool_lookback = None }
+    in
+    Store.save_company_profile ~company_id:session.company_id { existing with pool_lookback = lookback };
+    Dream.json {|{"status":"ok"}|}
 
 (* Simple base64 for Greenhouse basic auth *)
 let base64_encode s =

@@ -11,6 +11,11 @@ let make = () => {
   let (researchLoading, setResearchLoading) = React.useState(() => false);
   let (researchMsg, setResearchMsg)   = React.useState(() => None);
 
+  /* Pool settings */
+  let (poolLookback, setPoolLookback) = React.useState(() => "all_time");
+  let (poolSaving, setPoolSaving)     = React.useState(() => false);
+  let (poolSaveMsg, setPoolSaveMsg)   = React.useState(() => None);
+
   /* AI settings */
   let (aiProvider, setAiProvider) = React.useState(() => "anthropic");
   let (aiApiKey, setAiApiKey)     = React.useState(() => "");
@@ -41,6 +46,10 @@ let make = () => {
       setCompanyUrls(_ => String.concat("\n", p.Roladeck_frontend_api.Api.company_urls));
       setCompanyBrief(_ => p.Roladeck_frontend_api.Api.company_brief);
       setBriefAt(_ => p.Roladeck_frontend_api.Api.brief_generated_at);
+      setPoolLookback(_ => switch(p.Roladeck_frontend_api.Api.pool_lookback) {
+        | None => "all_time"
+        | Some(s) => s
+      });
       Js.Promise.resolve();
     })
     |> ignore;
@@ -87,6 +96,32 @@ let make = () => {
       let msg = switch (Js.Json.stringifyAny(err)) { | Some(s) => s | None => "Unknown error" };
       setResearchLoading(_ => false);
       setResearchMsg(_ => Some("Error: " ++ msg));
+      Js.Promise.resolve();
+    })
+    |> ignore;
+  };
+
+  let handleSavePoolSettings = _ => {
+    setPoolSaving(_ => true);
+    setPoolSaveMsg(_ => None);
+    let valueToSave = if (poolLookback == "start_from_today") {
+      let d = Js.Date.make();
+      let y = Js.Float.toString(Js.Date.getFullYear(d));
+      let m = Js.Date.getMonth(d) +. 1.0;
+      let mo = if (m < 10.0) { "0" ++ Js.Float.toString(m) } else { Js.Float.toString(m) };
+      let dy = Js.Date.getDate(d);
+      let dd = if (dy < 10.0) { "0" ++ Js.Float.toString(dy) } else { Js.Float.toString(dy) };
+      y ++ "-" ++ mo ++ "-" ++ dd
+    } else { poolLookback };
+    Roladeck_frontend_api.Api.savePoolSettings(~lookback=Some(valueToSave))
+    |> Js.Promise.then_(_ => {
+      setPoolSaving(_ => false);
+      setPoolSaveMsg(_ => Some("Saved."));
+      Js.Promise.resolve();
+    })
+    |> Js.Promise.catch(_ => {
+      setPoolSaving(_ => false);
+      setPoolSaveMsg(_ => Some("Save failed."));
       Js.Promise.resolve();
     })
     |> ignore;
@@ -240,6 +275,40 @@ let make = () => {
                : React.null}
            </div>
          }}
+      </div>
+
+      /* ── Talent Pool ── */
+      <div className="settings-section">
+        <h2 className="settings-section-title">{"Talent Pool" |> React.string}</h2>
+        <p className="settings-section-desc">
+          {"Control how far back historical candidates are included. Each role is capped at the top 100 candidates by score." |> React.string}
+        </p>
+        <div className="form-row">
+          <label className="form-label">{"Lookback window" |> React.string}</label>
+          <select
+            className="field-input"
+            value=poolLookback
+            onChange={e => setPoolLookback(_ => React.Event.Form.target(e)##value)}>
+            <option value="all_time">{"All time" |> React.string}</option>
+            <option value="3_years">{"3 years" |> React.string}</option>
+            <option value="18_months">{"18 months" |> React.string}</option>
+            <option value="1_year">{"1 year" |> React.string}</option>
+            <option value="6_months">{"6 months" |> React.string}</option>
+            <option value="start_from_today">{"Start from today" |> React.string}</option>
+          </select>
+        </div>
+        <div className="integration-actions">
+          <button
+            className={"btn-primary " ++ (poolSaving ? "btn-loading" : "")}
+            disabled=poolSaving
+            onClick=handleSavePoolSettings>
+            {(poolSaving ? "Saving..." : "Save pool settings") |> React.string}
+          </button>
+          {switch(poolSaveMsg) {
+            | None => React.null
+            | Some(msg) => <span className="save-msg">{msg |> React.string}</span>
+          }}
+        </div>
       </div>
 
       /* ── AI Configuration ── */

@@ -50,6 +50,19 @@ let now_iso () =
     (tm.Unix.tm_year + 1900) (tm.Unix.tm_mon + 1) tm.Unix.tm_mday
     tm.Unix.tm_hour tm.Unix.tm_min tm.Unix.tm_sec
 
+let rec today_iso_offset delta_days =
+  let t = Unix.gettimeofday () +. float_of_int (delta_days * 86400) in
+  let tm = Unix.gmtime t in
+  Printf.sprintf "%04d-%02d-%02d"
+    (tm.Unix.tm_year + 1900) (tm.Unix.tm_mon + 1) tm.Unix.tm_mday
+and compute_lookback_cutoff = function
+  | None | Some "all_time" -> None
+  | Some "6_months"  -> Some (today_iso_offset (-183))
+  | Some "1_year"    -> Some (today_iso_offset (-365))
+  | Some "18_months" -> Some (today_iso_offset (-548))
+  | Some "3_years"   -> Some (today_iso_offset (-1095))
+  | Some s           -> Some s
+
 let save_json_file path json =
   let tmp = path ^ ".tmp" in
   Yojson.Safe.to_file tmp json;
@@ -142,18 +155,40 @@ let contains_sub s sub =
     done;
     !found
 
-let get_summaries ~company_id ?(role_id = "") ?(stage = None) ?(q = "") () =
+let get_summaries ~company_id ?(role_id = "") ?(stage = None) ?(q = "") ?(lookback = None) () =
   let pool = load_pool ~company_id () in
+  let cutoff = compute_lookback_cutoff lookback in
   let filtered = List.filter (fun (c : candidate_record) ->
     (String.length role_id = 0 ||
      List.exists (fun (s : candidate_score) -> s.role_id = role_id) c.scores)
     && (match stage with None -> true | Some st -> c.ats_stage = st)
     && (String.length q = 0 ||
         contains_sub (String.lowercase_ascii c.name) (String.lowercase_ascii q))
+    && (match cutoff with None -> true | Some d ->
+        String.length c.created_at >= 10 && String.sub c.created_at 0 10 >= d)
   ) pool in
-  List.sort (fun (a : candidate_record) (b : candidate_record) ->
-    String.compare b.created_at a.created_at) filtered
-  |> List.map summary_of_record
+  let sorted = List.sort (fun (a : candidate_record) (b : candidate_record) ->
+    String.compare b.created_at a.created_at) filtered in
+  let capped =
+    if String.length role_id = 0 then sorted
+    else begin
+      let scored = List.map (fun (c : candidate_record) ->
+        let rs = List.fold_left (fun best (s : candidate_score) ->
+          if s.role_id = role_id && s.overall_score > best then s.overall_score else best
+        ) 0.0 c.scores in
+        (rs, c)
+      ) sorted in
+      let by_score = List.sort (fun (a, _) (b, _) -> Float.compare b a) scored in
+      let rec take n = function
+        | [] -> [] | _ when n = 0 -> [] | x :: rest -> x :: take (n - 1) rest
+      in
+      take 100 by_score
+      |> List.sort (fun (_, (a : candidate_record)) (_, (b : candidate_record)) ->
+           String.compare b.created_at a.created_at)
+      |> List.map snd
+    end
+  in
+  List.map summary_of_record capped
 
 let get_pool_stats ~company_id () : pool_stats =
   let pool = load_pool ~company_id () in

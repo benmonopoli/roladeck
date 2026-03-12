@@ -282,6 +282,7 @@ type company_profile = {
   company_urls       : string list;
   company_brief      : string;
   brief_generated_at : string option;
+  pool_lookback      : string option;
 }
 
 (* ── Greenhouse Sync ── *)
