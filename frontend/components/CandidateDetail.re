@@ -9,6 +9,21 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
   let (verifying, setVerifying) = React.useState(() => false);
   let (trustStatus, setTrustStatus) = React.useState(() => TrustPending);
   let (trustFlags, setTrustFlags) = React.useState(() => []);
+  let (allSkills, setAllSkills) = React.useState(() => []);
+  let (scoreRoleId, setScoreRoleId) = React.useState(() => "");
+  let (scoreSeniority, setScoreSeniority) = React.useState(() => "Senior");
+  let (scoring, setScoring) = React.useState(() => false);
+  let (scoreMsg, setScoreMsg) = React.useState(() => None);
+
+  React.useEffect0(() => {
+    Roladeck_frontend_api.Api.getSkills()
+    |> Js.Promise.then_(s => {
+      setAllSkills(_ => s);
+      Js.Promise.resolve();
+    })
+    |> ignore;
+    None;
+  });
 
   React.useEffect1(() => {
     setLoading(_ => true);
@@ -87,6 +102,35 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
       Js.Promise.resolve();
     })
     |> ignore;
+  };
+
+  let parseSeniority = s => switch (s) {
+    | "Junior" => Junior | "Mid" => Mid | "Staff" => Staff
+    | "Principal" => Principal | _ => Senior
+  };
+
+  let handleScoreAgainstRole = (c: candidate_record) => {
+    if (scoreRoleId != "") {
+      setScoring(_ => true);
+      setScoreMsg(_ => None);
+      Roladeck_frontend_api.Api.scoreExistingCandidate(
+        ~candidateId=c.id,
+        ~roleId=scoreRoleId,
+        ~seniority=parseSeniority(scoreSeniority)
+      )
+      |> Js.Promise.then_(updated => {
+        setCandidate(_ => Some(updated));
+        setScoring(_ => false);
+        setScoreMsg(_ => Some("Scored."));
+        Js.Promise.resolve();
+      })
+      |> Js.Promise.catch(_ => {
+        setScoring(_ => false);
+        setScoreMsg(_ => Some("Score failed."));
+        Js.Promise.resolve();
+      })
+      |> ignore;
+    };
   };
 
   let exportMarkdown = (c: candidate_record) => {
@@ -300,6 +344,48 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
                |> Array.of_list
                |> React.array}
             </div>}
+
+        <div className="score-against-panel">
+          <h3 className="score-against-title">{"Score against a role" |> React.string}</h3>
+          <p className="score-against-desc">
+            {"Uses the stored profile to score this candidate against any playbook." |> React.string}
+          </p>
+          <div className="score-against-row">
+            <select
+              className="field-input score-against-select"
+              value=scoreRoleId
+              onChange={e => setScoreRoleId(_ => React.Event.Form.target(e)##value)}>
+              <option value="">{"Select a role..." |> React.string}</option>
+              {allSkills
+               |> List.map((s: skill_summary) =>
+                    <option key={s.id} value={s.id}>{React.string(s.name)}</option>
+                  )
+               |> Array.of_list
+               |> React.array}
+            </select>
+            <select
+              className="field-input score-against-seniority"
+              value=scoreSeniority
+              onChange={e => setScoreSeniority(_ => React.Event.Form.target(e)##value)}>
+              {["Junior", "Mid", "Senior", "Staff", "Principal"]
+               |> List.map(level =>
+                    <option key=level value=level>{React.string(level)}</option>
+                  )
+               |> Array.of_list
+               |> React.array}
+            </select>
+            <button
+              className={"btn-primary " ++ (scoring ? "btn-loading" : "")}
+              disabled={scoring || scoreRoleId == ""}
+              onClick={_ => handleScoreAgainstRole(c)}>
+              {React.string(scoring ? "Scoring..." : "Score")}
+            </button>
+            {switch(scoreMsg) {
+              | None => React.null
+              | Some(msg) => <span className="save-msg">{React.string(msg)}</span>
+            }}
+          </div>
+        </div>
       </div>
     };
   };

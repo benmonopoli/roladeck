@@ -1902,3 +1902,17 @@ a:hover { text-decoration: underline; }
 .import-url-row { display: flex; gap: 8px; }
 .import-url-row input { flex: 1; }
 .import-error { font-size: 13px; color: var(--red); margin-top: 10px; }
+
+/* Score against role panel */
+.score-against-panel {
+  margin-top: 28px;
+  padding: 18px 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.score-against-title { font-size: 14px; font-weight: 700; margin: 0 0 4px; }
+.score-against-desc { font-size: 13px; color: var(--ink-2); margin: 0 0 14px; }
+.score-against-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.score-against-select { flex: 1; min-width: 180px; }
+.score-against-seniority { width: 110px; flex-shrink: 0; }

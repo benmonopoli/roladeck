@@ -579,6 +579,18 @@ let saveToPool = (~name, ~disciplineId, ~seniority, ~notes, ~stage) =>
     Js.Promise.resolve(Some(decodeCandidateRecord(json)))
   );
 
+let scoreExistingCandidate = (~candidateId, ~roleId, ~seniority) =>
+  postJson(
+    base ++ "/api/pool/" ++ candidateId ++ "/score",
+    Js.Json.object_(Js.Dict.fromArray([|
+      ("role_id",   Js.Json.string(roleId)),
+      ("seniority", encodeSeniority(seniority)),
+    |]))
+  )
+  |> Js.Promise.then_(json =>
+    Js.Promise.resolve(decodeCandidateRecord(json))
+  );
+
 let updateStage = (id, stage) =>
   putJson(
     base ++ "/api/pool/" ++ id ++ "/stage",

@@ -355,6 +355,65 @@ let handle_pool_stage req =
        | Ok updated ->
          Dream.json (Yojson.Safe.to_string (candidate_record_to_yojson updated)))
 
+let handle_pool_score_existing req =
+  match require_session req with
+  | None -> Dream.respond ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let company_id = session.company_id in
+    let candidate_id = Dream.param req "id" in
+    (match Store.get_by_id ~company_id candidate_id with
+     | None -> json_response ~status:`Not_Found {|{"error":"candidate not found"}|}
+     | Some candidate ->
+       let%lwt body = Dream.body req in
+       let json = Yojson.Safe.from_string body in
+       let get_str key = match Yojson.Safe.Util.member key json with `String s -> s | _ -> "" in
+       let role_id  = get_str "role_id" in
+       let seniority_str = get_str "seniority" in
+       let seniority =
+         match Yojson.Safe.from_string (Printf.sprintf {|"%s"|} seniority_str) |> seniority_level_of_yojson with
+         | Ok s -> s | Error _ -> Senior
+       in
+       if String.length role_id = 0 then
+         json_response ~status:`Bad_Request {|{"error":"role_id required"}|}
+       else
+         match find_skill_for_company ~company_id role_id with
+         | None -> json_response ~status:`Not_Found {|{"error":"role not found"}|}
+         | Some skill ->
+           let scoring_text =
+             let st = String.trim candidate.source_text in
+             if String.length st > 0 then st else candidate.name
+           in
+           let score_req : scoring_request = {
+             candidate_id  = candidate.id;
+             discipline_id = role_id;
+             seniority;
+             candidate_notes = scoring_text;
+           } in
+           let result = score_candidate skill score_req in
+           let now = Store.now_iso () in
+           let cs : candidate_score = {
+             role_id       = skill.id;
+             role_name     = skill.discipline.name;
+             seniority;
+             overall_score = result.overall_score;
+             recommendation= result.recommendation;
+             tier_scores   = result.tier_scores;
+             red_flags_hit = result.red_flags_hit;
+             criterion_results = result.criterion_results;
+             scored_at     = now;
+           } in
+           (* Replace any existing score for this role, append otherwise *)
+           let existing_scores =
+             List.filter (fun (s : candidate_score) -> s.role_id <> role_id) candidate.scores
+           in
+           let updated_candidate = {
+             candidate with
+             scores     = existing_scores @ [cs];
+             updated_at = now;
+           } in
+           Store.upsert ~company_id updated_candidate;
+           Dream.json (Yojson.Safe.to_string (candidate_record_to_yojson updated_candidate)))
+
 let handle_verify_candidate req =
   match require_session req with
   | None -> Dream.respond ~status:`Unauthorized {|{"error":"Unauthorized"}|}

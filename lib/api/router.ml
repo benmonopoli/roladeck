@@ -43,6 +43,7 @@ let routes = Dream.router [
   Dream.get  "/api/pool"                handle_pool_list;
   Dream.post "/api/pool"                handle_pool_save;
   Dream.get  "/api/pool/:id"            handle_pool_get;
+  Dream.post "/api/pool/:id/score"      handle_pool_score_existing;
   Dream.put  "/api/pool/:id/stage"      handle_pool_stage;
   Dream.post "/api/candidates/:id/verify" handle_verify_candidate;
   Dream.get  "/api/calibration/:role_id" handle_calibration;
