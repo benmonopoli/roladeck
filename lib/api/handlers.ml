@@ -165,6 +165,7 @@ let handle_signup req =
         created_at = Store.now_iso ();
       } in
       Store.upsert_user user;
+      Store.cleanup_expired_sessions ();
       let token = Auth.generate_token () in
       let session : session_record = {
         token; user_id = user.id; company_id = company.id; created_at = Store.now_iso ()
@@ -195,6 +196,7 @@ let handle_login req =
     else begin
       let company_name = match Store.find_company_by_id user.company_id with
         | Some c -> c.name | None -> "" in
+      Store.cleanup_expired_sessions ();
       let token = Auth.generate_token () in
       let session : session_record = {
         token; user_id = user.id; company_id = user.company_id; created_at = Store.now_iso ()

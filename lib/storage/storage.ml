@@ -460,8 +460,37 @@ let save_auth_sessions (sessions : session_record list) : unit =
   ensure_dir ();
   save_json_file sessions_file (`List (List.map session_record_to_yojson sessions))
 
+let session_ttl = 30 * 24 * 3600  (* 30 days in seconds *)
+
+(** Parse "YYYY-MM-DDTHH:MM:SSZ" → Unix timestamp float. Returns 0.0 on failure. *)
+let parse_iso_timestamp ts =
+  try
+    Scanf.sscanf ts "%d-%d-%dT%d:%d:%dZ" (fun yr mo da h m s ->
+      let tm = { Unix.tm_year = yr - 1900; tm_mon = mo - 1; tm_mday = da;
+                 tm_hour = h; tm_min = m; tm_sec = s;
+                 tm_wday = 0; tm_yday = 0; tm_isdst = false } in
+      fst (Unix.mktime tm))
+  with _ -> 0.0
+
+let is_session_expired (s : session_record) =
+  let age = Unix.gettimeofday () -. parse_iso_timestamp s.created_at in
+  age > float_of_int session_ttl
+
 let find_session token =
-  List.find_opt (fun (s : session_record) -> s.token = token) (load_auth_sessions ())
+  let sessions = load_auth_sessions () in
+  match List.find_opt (fun (s : session_record) -> s.token = token) sessions with
+  | None -> None
+  | Some s when is_session_expired s ->
+    save_auth_sessions (List.filter (fun (x : session_record) -> x.token <> token) sessions);
+    None
+  | Some s -> Some s
+
+(** Remove all sessions older than session_ttl. Call on login/signup to keep the file tidy. *)
+let cleanup_expired_sessions () =
+  let sessions = load_auth_sessions () in
+  let live = List.filter (fun s -> not (is_session_expired s)) sessions in
+  if List.length live < List.length sessions then
+    save_auth_sessions live
 
 let upsert_session (s : session_record) : unit =
   let sessions = load_auth_sessions () in
