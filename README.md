@@ -56,7 +56,15 @@ Every scored candidate is saved and organised by playbook. Candidates can appear
 
 ## Role Playbooks
 
-57 playbooks across Tech, Marketing, and Sales. Each one has scoring criteria, seniority signals, sourcing strings, interview stages, and red flags.
+57 built-in playbooks across Tech, Marketing, and Sales. Each one has scoring criteria, seniority signals, sourcing strings, interview stages, and red flags.
+
+You can also create your own playbooks per company — three ways:
+
+- **Upload a markdown file** — use the downloadable template, fill it in, upload it. The parser picks up criteria tiers, red flags, seniority signals, comp ranges, and sourcing strings from the markdown structure.
+- **Import from a URL** — paste a raw GitHub URL (or any direct link to a `.md` file). GitHub `blob/` links are normalised to `raw.githubusercontent.com` automatically.
+- **Build manually** — a form to fill in name, category, description, criteria rows, and red flags directly in the browser.
+
+Custom playbooks are per-tenant, stored alongside your candidate pool, and show up in scoring, sourcing, and the talent pool the same way built-in playbooks do.
 
 ![Role Playbooks](screenshots/06-playbooks.png)
 
@@ -125,4 +133,3 @@ npm run dev              # frontend on :3000
 
 Connect your AI provider and Greenhouse from Settings. Data is stored per-tenant under `~/.roladeck/tenants/{company_id}/`.
 
-> The internal OCaml library names (`ahrefs_types`, `ahrefs_storage`, etc.) reflect the project's working name during development. The product is RolaDeck.
