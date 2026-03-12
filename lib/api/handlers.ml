@@ -322,6 +322,46 @@ let handle_pool_save req =
            trust_check = None;
          } in
          Store.upsert ~company_id record;
+         (* Async: classify and score against all other matched playbooks *)
+         Lwt.async (fun () ->
+           let%lwt cl = Classify.classify_candidate ~company_id ~candidate_notes:pr.candidate_notes in
+           let now2 = Store.now_iso () in
+           let new_scores =
+             List.filter_map (fun (m : playbook_match) ->
+               if m.playbook_id = pr.discipline_id then None
+               else
+                 match find_skill_for_company ~company_id m.playbook_id with
+                 | None -> None
+                 | Some s ->
+                   let sr : scoring_request = {
+                     candidate_id    = record.name;
+                     discipline_id   = s.id;
+                     seniority       = pr.seniority;
+                     candidate_notes = pr.candidate_notes;
+                   } in
+                   let res = score_candidate s sr in
+                   Some {
+                     role_id           = s.id;
+                     role_name         = s.discipline.name;
+                     seniority         = pr.seniority;
+                     overall_score     = res.overall_score;
+                     recommendation    = res.recommendation;
+                     tier_scores       = res.tier_scores;
+                     red_flags_hit     = res.red_flags_hit;
+                     criterion_results = res.criterion_results;
+                     scored_at         = now2;
+                   }
+             ) cl.matches
+           in
+           (if new_scores <> [] then
+             match Store.get_by_id ~company_id record.id with
+             | None -> ()
+             | Some current ->
+               Store.upsert ~company_id {
+                 current with scores = current.scores @ new_scores; updated_at = now2;
+               });
+           Lwt.return_unit
+         );
          Dream.json (Yojson.Safe.to_string (candidate_record_to_yojson record)))
 
 let handle_pool_get req =
@@ -412,6 +452,50 @@ let handle_pool_score_existing req =
              updated_at = now;
            } in
            Store.upsert ~company_id updated_candidate;
+           (* Async: classify and fill in any additional matched playbooks *)
+           Lwt.async (fun () ->
+             let%lwt cl = Classify.classify_candidate ~company_id ~candidate_notes:scoring_text in
+             let now2 = Store.now_iso () in
+             let new_scores =
+               List.filter_map (fun (m : playbook_match) ->
+                 if m.playbook_id = role_id then None
+                 else
+                   match find_skill_for_company ~company_id m.playbook_id with
+                   | None -> None
+                   | Some s ->
+                     let sr : scoring_request = {
+                       candidate_id    = candidate.id;
+                       discipline_id   = s.id;
+                       seniority;
+                       candidate_notes = scoring_text;
+                     } in
+                     let res = score_candidate s sr in
+                     Some {
+                       role_id           = s.id;
+                       role_name         = s.discipline.name;
+                       seniority;
+                       overall_score     = res.overall_score;
+                       recommendation    = res.recommendation;
+                       tier_scores       = res.tier_scores;
+                       red_flags_hit     = res.red_flags_hit;
+                       criterion_results = res.criterion_results;
+                       scored_at         = now2;
+                     }
+               ) cl.matches
+             in
+             (if new_scores <> [] then
+               match Store.get_by_id ~company_id candidate.id with
+               | None -> ()
+               | Some current ->
+                 let already_scored = List.map (fun (s : candidate_score) -> s.role_id) current.scores in
+                 let truly_new = List.filter (fun (s : candidate_score) ->
+                   not (List.mem s.role_id already_scored)) new_scores in
+                 if truly_new <> [] then
+                   Store.upsert ~company_id {
+                     current with scores = current.scores @ truly_new; updated_at = now2;
+                   });
+             Lwt.return_unit
+           );
            Dream.json (Yojson.Safe.to_string (candidate_record_to_yojson updated_candidate)))
 
 let handle_verify_candidate req =
