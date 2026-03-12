@@ -366,6 +366,42 @@ let encodePlatformOpt = p =>
   | Some(Custom(s)) => Js.Json.array([|Js.Json.string("Custom"), Js.Json.string(s)|])
   };
 
+let encodeTier = t =>
+  Js.Json.string(switch (t) {
+  | T1_MustHave => "T1_MustHave"
+  | T2_Differentiator => "T2_Differentiator"
+  | T3_RareUpside => "T3_RareUpside"
+  });
+
+let encodeCriterion = (c: skill_criterion) =>
+  Js.Json.object_(Js.Dict.fromArray([|
+    ("text", Js.Json.string(c.text)),
+    ("tier", encodeTier(c.tier)),
+  |]));
+
+let encodeCategory = cat =>
+  Js.Json.string(switch (cat) {
+  | Tech => "Tech" | Marketing => "Marketing" | Sales => "Sales"
+  });
+
+let encodeSkillRecord = (s: skill_record) =>
+  Js.Json.object_(Js.Dict.fromArray([|
+    ("id", Js.Json.string(s.id)),
+    ("discipline", Js.Json.object_(Js.Dict.fromArray([|
+      ("id", Js.Json.string(s.discipline.id)),
+      ("name", Js.Json.string(s.discipline.name)),
+      ("category", encodeCategory(s.discipline.category)),
+      ("description", Js.Json.string(s.discipline.description)),
+    |]))),
+    ("criteria", Js.Json.array(Array.of_list(List.map(encodeCriterion, s.criteria)))),
+    ("sourcing_strings", Js.Json.array([||])),
+    ("title_synonyms", Js.Json.array([||])),
+    ("seniority_signals", Js.Json.array([||])),
+    ("interview_stages", Js.Json.array([||])),
+    ("red_flags", Js.Json.array(Array.of_list(List.map(Js.Json.string, s.red_flags)))),
+    ("comp_ranges", Js.Json.array([||])),
+  |]));
+
 /* --- API functions --- */
 
 let getSkills = () =>
@@ -436,6 +472,36 @@ let getSourceStrings = (query: sourcing_query) =>
   |> Js.Promise.then_(json =>
     Js.Promise.resolve(Some(decodeSourcingResult(json)))
   );
+
+/* --- Custom Skills API --- */
+
+let getCustomSkills = () =>
+  fetchJson(base ++ "/api/custom-skills")
+  |> Js.Promise.then_(json => {
+    let skills =
+      json
+      |> Js.Json.decodeArray
+      |> Option.value(~default=[||])
+      |> Array.to_list
+      |> List.map(decodeSkillSummary);
+    Js.Promise.resolve(skills);
+  });
+
+let createCustomSkill = (skill: skill_record) =>
+  postJson(base ++ "/api/custom-skills", encodeSkillRecord(skill))
+  |> Js.Promise.then_(json => Js.Promise.resolve(decodeSkillRecord(json)));
+
+let updateCustomSkill = (id: string, skill: skill_record) =>
+  putJson(base ++ "/api/custom-skills/" ++ id, encodeSkillRecord(skill))
+  |> Js.Promise.then_(json => Js.Promise.resolve(decodeSkillRecord(json)));
+
+let deleteCustomSkill = (id: string) =>
+  Fetch.fetchWithInit(
+    base ++ "/api/custom-skills/" ++ id,
+    Fetch.RequestInit.make(~method_=Delete, ())
+  )
+  |> Js.Promise.then_(Fetch.Response.json)
+  |> Js.Promise.then_(_ => Js.Promise.resolve());
 
 /* --- Pool API --- */
 

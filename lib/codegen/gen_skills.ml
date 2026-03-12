@@ -48,7 +48,7 @@ let () =
       let dir = Filename.dirname path in
       let skill_id = Filename.basename dir in
       Printf.printf "  Parsing %s\n%!" skill_id;
-      Skill_parser.parse_skill_file path skill_id
+      Roladeck_skill_parser.Skill_parser.parse_skill_file path skill_id
     ) (List.sort String.compare skill_files)
   in
 

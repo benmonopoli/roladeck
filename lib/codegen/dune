@@ -1,4 +1,9 @@
+(library
+ (name roladeck_skill_parser)
+ (modules skill_parser)
+ (libraries roladeck_types str))
+
 (executable
  (name gen_skills)
- (modules gen_skills skill_parser skill_emitter)
- (libraries roladeck_types omd str))
+ (modules gen_skills skill_emitter)
+ (libraries roladeck_skill_parser roladeck_types omd str))

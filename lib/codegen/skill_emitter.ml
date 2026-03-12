@@ -1,5 +1,5 @@
 open Roladeck_types.Types
-open Skill_parser
+open Roladeck_skill_parser.Skill_parser
 
 (** OCaml string literal escaping *)
 let escape_string s =

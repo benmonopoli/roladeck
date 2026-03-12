@@ -8,6 +8,7 @@ module Auth = Roladeck_auth.Auth
 module AiSourcing = Roladeck_ai.Ai_sourcing
 module CompanyResearch = Roladeck_ai.Company_research
 module Classify = Roladeck_ai.Classify
+module SkillParser = Roladeck_skill_parser.Skill_parser
 module Verify = Roladeck_ai.Verify
 module GhSync = Roladeck_sync.Greenhouse_sync
 
@@ -22,6 +23,11 @@ let skill_to_summary (s : skill_record) : skill_summary =
     description = s.discipline.description;
     criteria_count = List.length s.criteria;
   }
+
+let find_skill_for_company ~company_id id =
+  match find_by_id id with
+  | Some s -> Some s
+  | None -> Store.find_custom_skill ~company_id id
 
 let require_session req =
   match Auth.get_session req with
@@ -41,10 +47,16 @@ let handle_skills _req =
 let handle_skill req =
   let id = Dream.param req "id" in
   match find_by_id id with
-  | None ->
-    json_response ~status:`Not_Found {|{"error":"skill not found"}|}
   | Some skill ->
     Dream.json (Yojson.Safe.to_string (skill_record_to_yojson skill))
+  | None ->
+    match require_session req with
+    | None -> json_response ~status:`Not_Found {|{"error":"skill not found"}|}
+    | Some session ->
+      match Store.find_custom_skill ~company_id:session.company_id id with
+      | None -> json_response ~status:`Not_Found {|{"error":"skill not found"}|}
+      | Some skill ->
+        Dream.json (Yojson.Safe.to_string (skill_record_to_yojson skill))
 
 let handle_search req =
   let q = Dream.query req "q" |> Option.value ~default:"" in
@@ -79,7 +91,11 @@ let handle_score req =
      json_response ~status:`Bad_Request
        (Printf.sprintf {|{"error":"invalid request: %s"}|} e)
    | Ok score_req ->
-     match find_by_id score_req.discipline_id with
+     let skill_opt = match require_session req with
+       | None -> find_by_id score_req.discipline_id
+       | Some session -> find_skill_for_company ~company_id:session.company_id score_req.discipline_id
+     in
+     match skill_opt with
      | None ->
        json_response ~status:`Not_Found
          {|{"error":"discipline not found"}|}
@@ -94,7 +110,11 @@ let handle_source req =
      json_response ~status:`Bad_Request
        (Printf.sprintf {|{"error":"invalid request: %s"}|} e)
    | Ok query ->
-     match find_by_id query.discipline_id with
+     let skill_opt = match require_session req with
+       | None -> find_by_id query.discipline_id
+       | Some session -> find_skill_for_company ~company_id:session.company_id query.discipline_id
+     in
+     match skill_opt with
      | None ->
        json_response ~status:`Not_Found
          {|{"error":"discipline not found"}|}
@@ -762,3 +782,114 @@ let handle_test_greenhouse req =
           json_response ~status:`Internal_Server_Error
             (Printf.sprintf {|{"ok":false,"error":"%s"}|}
               (String.escaped (Printexc.to_string exn))))
+
+(* ── Custom Skill CRUD ── *)
+
+let handle_custom_skills_list req =
+  match require_session req with
+  | None -> json_response ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let skills = Store.load_custom_skills ~company_id:session.company_id () in
+    let summaries = List.map skill_to_summary skills in
+    let json = `List (List.map skill_summary_to_yojson summaries) in
+    Dream.json (Yojson.Safe.to_string json)
+
+let handle_custom_skill_create req =
+  match require_session req with
+  | None -> json_response ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let%lwt body = Dream.body req in
+    (match Yojson.Safe.from_string body |> skill_record_of_yojson with
+     | Error e -> json_response ~status:`Bad_Request
+         (Printf.sprintf {|{"error":"invalid request: %s"}|} e)
+     | Ok skill ->
+       Store.upsert_custom_skill ~company_id:session.company_id skill;
+       Dream.json (Yojson.Safe.to_string (skill_record_to_yojson skill)))
+
+let handle_custom_skill_update req =
+  match require_session req with
+  | None -> json_response ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let id = Dream.param req "id" in
+    (match Store.find_custom_skill ~company_id:session.company_id id with
+     | None -> json_response ~status:`Not_Found {|{"error":"not found"}|}
+     | Some _ ->
+       let%lwt body = Dream.body req in
+       (match Yojson.Safe.from_string body |> skill_record_of_yojson with
+        | Error e -> json_response ~status:`Bad_Request
+            (Printf.sprintf {|{"error":"invalid request: %s"}|} e)
+        | Ok skill ->
+          Store.upsert_custom_skill ~company_id:session.company_id skill;
+          Dream.json (Yojson.Safe.to_string (skill_record_to_yojson skill))))
+
+let handle_custom_skill_delete req =
+  match require_session req with
+  | None -> json_response ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let id = Dream.param req "id" in
+    (match Store.find_custom_skill ~company_id:session.company_id id with
+     | None -> json_response ~status:`Not_Found {|{"error":"not found"}|}
+     | Some _ ->
+       Store.delete_custom_skill ~company_id:session.company_id id;
+       Dream.json {|{"ok":true}|})
+
+(* ── Custom Skill Import (markdown) ── *)
+
+let normalise_github_url url =
+  let prefix = "https://github.com/" in
+  let plen = String.length prefix in
+  if String.length url >= plen && String.sub url 0 plen = prefix then
+    let rest = String.sub url plen (String.length url - plen) in
+    (try
+      let i = Str.search_forward (Str.regexp "/blob/") rest 0 in
+      let before = String.sub rest 0 i in
+      let after = String.sub rest (i + 6) (String.length rest - i - 6) in
+      "https://raw.githubusercontent.com/" ^ before ^ "/" ^ after
+    with Not_found -> url)
+  else url
+
+let handle_import_playbook req =
+  match require_session req with
+  | None -> json_response ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let%lwt body = Dream.body req in
+    let json = Yojson.Safe.from_string body in
+    let get_str key = match Yojson.Safe.Util.member key json with
+      | `String s -> s | _ -> "" in
+    let content_param = get_str "content" in
+    let url_param     = get_str "url" in
+    let id_param      = get_str "id" in
+    if String.length content_param = 0 && String.length url_param = 0 then
+      json_response ~status:`Bad_Request {|{"error":"provide content or url"}|}
+    else
+      let%lwt content_result =
+        if String.length content_param > 0 then Lwt.return (Ok content_param)
+        else
+          let url = normalise_github_url url_param in
+          let uri = Uri.of_string url in
+          Lwt.catch
+            (fun () ->
+              let%lwt (_resp, body_cohttp) = Cohttp_lwt_unix.Client.get uri in
+              let%lwt text = Cohttp_lwt.Body.to_string body_cohttp in
+              Lwt.return (Ok text))
+            (fun e -> Lwt.return (Error (Printexc.to_string e)))
+      in
+      match content_result with
+      | Error e ->
+        json_response ~status:`Bad_Request
+          (Printf.sprintf {|{"error":"fetch failed: %s"}|} (String.escaped e))
+      | Ok text ->
+        let skill_id =
+          if String.length id_param > 0 then id_param
+          else
+            let t = int_of_float (Unix.gettimeofday () *. 1000.0) in
+            Printf.sprintf "custom-hiring-import-%d" t
+        in
+        (match SkillParser.parse_skill_content ~content:text ~skill_id with
+         | None ->
+           json_response ~status:`Bad_Request
+             {|{"error":"could not parse markdown — check the file matches the template format"}|}
+         | Some ps ->
+           let skill = SkillParser.parsed_skill_to_record ps in
+           Store.upsert_custom_skill ~company_id:session.company_id skill;
+           Dream.json (Yojson.Safe.to_string (skill_record_to_yojson skill)))

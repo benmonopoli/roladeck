@@ -183,6 +183,73 @@ let skill_record_to_yojson (s : skill_record) =
     "comp_ranges", `List (List.map comp_range_to_yojson s.comp_ranges);
   ]
 
+(* skill_record decoders *)
+let discipline_of_yojson j =
+  let open Result in
+  str_field j "id" >>= fun id ->
+  str_field j "name" >>= fun name ->
+  field j "category" >>= discipline_category_of_yojson >>= fun category ->
+  str_field j "description" >>= fun description ->
+  Ok { id; name; category; description }
+
+let seniority_signal_of_yojson j =
+  let open Result in
+  field j "from_level" >>= seniority_level_of_yojson >>= fun from_level ->
+  field j "to_level" >>= seniority_level_of_yojson >>= fun to_level ->
+  str_field j "signal_text" >>= fun signal_text ->
+  Ok { from_level; to_level; signal_text }
+
+let interview_stage_of_yojson j =
+  let open Result in
+  str_field j "stage_name" >>= fun stage_name ->
+  str_field j "format" >>= fun format ->
+  str_field j "assessing" >>= fun assessing ->
+  Ok { stage_name; format; assessing }
+
+let comp_range_of_yojson j =
+  let open Result in
+  field j "level" >>= seniority_level_of_yojson >>= fun level ->
+  int_field j "base_min" >>= fun base_min ->
+  int_field j "base_max" >>= fun base_max ->
+  Ok { level; base_min; base_max }
+
+let title_synonyms_of_yojson = function
+  | `List items ->
+    let pairs = List.filter_map (fun item ->
+      let lv = match field item "level" with Ok v -> v | Error _ -> `Null in
+      match seniority_level_of_yojson lv with
+      | Error _ -> None
+      | Ok level ->
+        let titles = match field item "titles" with
+          | Ok (`List ts) -> List.filter_map (function `String s -> Some s | _ -> None) ts
+          | _ -> [] in
+        Some (level, titles)
+    ) items in
+    Ok pairs
+  | j -> Error ("expected array for title_synonyms, got: " ^ Yojson.Safe.to_string j)
+
+let skill_record_of_yojson j =
+  let open Result in
+  str_field j "id" >>= fun id ->
+  field j "discipline" >>= discipline_of_yojson >>= fun discipline ->
+  list_field j "criteria" skill_criterion_of_yojson >>= fun criteria ->
+  let sourcing_strings = match list_field j "sourcing_strings" sourcing_string_of_yojson with
+    | Ok ss -> ss | Error _ -> [] in
+  let title_synonyms = match field j "title_synonyms" with
+    | Ok ts -> (match title_synonyms_of_yojson ts with Ok p -> p | Error _ -> [])
+    | Error _ -> [] in
+  let seniority_signals = match list_field j "seniority_signals" seniority_signal_of_yojson with
+    | Ok ss -> ss | Error _ -> [] in
+  let interview_stages = match list_field j "interview_stages" interview_stage_of_yojson with
+    | Ok ss -> ss | Error _ -> [] in
+  let red_flags = match field j "red_flags" with
+    | Ok (`List fs) -> List.filter_map (function `String s -> Some s | _ -> None) fs
+    | _ -> [] in
+  let comp_ranges = match list_field j "comp_ranges" comp_range_of_yojson with
+    | Ok cr -> cr | Error _ -> [] in
+  Ok { id; discipline; criteria; sourcing_strings; title_synonyms;
+       seniority_signals; interview_stages; red_flags; comp_ranges }
+
 (* skill_summary *)
 let skill_summary_to_yojson (s : skill_summary) =
   `Assoc [

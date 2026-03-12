@@ -545,3 +545,64 @@ let parse_skill_file path skill_id =
   with e ->
     Printf.eprintf "Warning: failed to parse %s: %s\n%!" path (Printexc.to_string e);
     None
+
+(** Parse from a content string directly — same logic as parse_skill_file minus the IO *)
+let parse_skill_content ~content ~skill_id =
+  try
+    let name =
+      match extract_display_name content with
+      | Some n -> n
+      | None ->
+        match extract_frontmatter_field "name" content with
+        | Some n -> n
+        | None -> skill_id
+    in
+    let description =
+      match extract_frontmatter_field "description" content with
+      | Some d ->
+        if String.length d > 300 then String.sub d 0 300 ^ "..."
+        else d
+      | None -> ""
+    in
+    let category =
+      match extract_frontmatter_field "category" content with
+      | Some c ->
+        let cl = String.lowercase_ascii (String.trim c) in
+        if cl = "marketing" then Marketing
+        else if cl = "sales" then Sales
+        else Tech
+      | None -> infer_category skill_id
+    in
+    Some {
+      ps_id = skill_id;
+      ps_name = name;
+      ps_category = category;
+      ps_description = description;
+      ps_criteria = parse_skill_tiers content;
+      ps_sourcing = parse_sourcing_strings content;
+      ps_title_synonyms = parse_title_synonyms content;
+      ps_seniority_signals = parse_seniority_signals content;
+      ps_interview_stages = parse_interview_stages content;
+      ps_red_flags = parse_red_flags content;
+      ps_comp_ranges = parse_comp_ranges content;
+    }
+  with _ -> None
+
+(** Convert parsed_skill intermediate type to the canonical skill_record *)
+let parsed_skill_to_record (ps : parsed_skill) : skill_record =
+  {
+    id = ps.ps_id;
+    discipline = {
+      id = ps.ps_id;
+      name = ps.ps_name;
+      category = ps.ps_category;
+      description = ps.ps_description;
+    };
+    criteria = ps.ps_criteria;
+    sourcing_strings = ps.ps_sourcing;
+    title_synonyms = ps.ps_title_synonyms;
+    seniority_signals = ps.ps_seniority_signals;
+    interview_stages = ps.ps_interview_stages;
+    red_flags = ps.ps_red_flags;
+    comp_ranges = ps.ps_comp_ranges;
+  }

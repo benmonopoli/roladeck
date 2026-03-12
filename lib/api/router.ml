@@ -4,7 +4,7 @@ let cors_middleware inner_handler req =
   let%lwt response = inner_handler req in
   Dream.add_header response "Access-Control-Allow-Origin" "*";
   Dream.add_header response "Access-Control-Allow-Headers" "Content-Type";
-  Dream.add_header response "Access-Control-Allow-Methods" "GET, POST, PUT, OPTIONS";
+  Dream.add_header response "Access-Control-Allow-Methods" "GET, POST, PUT, DELETE, OPTIONS";
   Lwt.return response
 
 let auth_middleware inner_handler req =
@@ -46,6 +46,12 @@ let routes = Dream.router [
   Dream.put  "/api/pool/:id/stage"      handle_pool_stage;
   Dream.post "/api/candidates/:id/verify" handle_verify_candidate;
   Dream.get  "/api/calibration/:role_id" handle_calibration;
+  (* Custom Skills *)
+  Dream.get    "/api/custom-skills"           handle_custom_skills_list;
+  Dream.post   "/api/custom-skills/import-md" handle_import_playbook;
+  Dream.post   "/api/custom-skills"           handle_custom_skill_create;
+  Dream.put    "/api/custom-skills/:id"  handle_custom_skill_update;
+  Dream.delete "/api/custom-skills/:id"  handle_custom_skill_delete;
   (* AI Sourcing + Classify *)
   Dream.post "/api/ai/source"    handle_ai_source;
   Dream.get  "/api/ai/sessions"  handle_ai_sessions;
@@ -67,7 +73,7 @@ let routes = Dream.router [
   Dream.options "/api/**" (fun _ -> Lwt.return (Dream.response ~headers:[
     ("Access-Control-Allow-Origin", "*");
     ("Access-Control-Allow-Headers", "Content-Type");
-    ("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+    ("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   ] ""));
 ]
 

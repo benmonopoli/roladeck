@@ -1,5 +1,5 @@
 (library
  (name roladeck_api)
  (modules handlers router)
- (libraries roladeck_types roladeck_json roladeck_skills_data roladeck_scoring roladeck_sourcing roladeck_storage roladeck_auth roladeck_ai roladeck_greenhouse roladeck_sync dream yojson lwt unix cohttp-lwt-unix cohttp-lwt)
+ (libraries roladeck_types roladeck_json roladeck_skills_data roladeck_scoring roladeck_sourcing roladeck_storage roladeck_auth roladeck_ai roladeck_greenhouse roladeck_sync roladeck_skill_parser dream yojson lwt unix cohttp-lwt-unix cohttp-lwt str)
  (preprocess (pps lwt_ppx)))

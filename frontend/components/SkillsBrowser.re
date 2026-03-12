@@ -1,11 +1,17 @@
 open Roladeck_types.Types;
 
 [@react.component]
-let make = (~onSelectSkill: string => unit, ~playbooks_only: bool) => {
-  let (skills, setSkills) = React.useState(() => []);
-  let (query, setQuery) = React.useState(() => "");
-  let (category, setCategory) = React.useState(() => None);
-  let (loading, setLoading) = React.useState(() => true);
+let make = (
+  ~onSelectSkill: string => unit,
+  ~onCreatePlaybook: option(string) => unit=(_ => ()),
+  ~playbooks_only: bool,
+  ~isAnonymous: bool=true,
+) => {
+  let (skills, setSkills)           = React.useState(() => []);
+  let (customSkills, setCustomSkills) = React.useState(() => []);
+  let (query, setQuery)             = React.useState(() => "");
+  let (category, setCategory)       = React.useState(() => None);
+  let (loading, setLoading)         = React.useState(() => true);
 
   React.useEffect2(() => {
     setLoading(_ => true);
@@ -21,6 +27,19 @@ let make = (~onSelectSkill: string => unit, ~playbooks_only: bool) => {
     |> ignore;
     None;
   }, (query, category));
+
+  /* Load custom skills for playbooks view when logged in */
+  React.useEffect0(() => {
+    if (playbooks_only && !isAnonymous) {
+      Roladeck_frontend_api.Api.getCustomSkills()
+      |> Js.Promise.then_(cs => {
+        setCustomSkills(_ => cs);
+        Js.Promise.resolve();
+      })
+      |> ignore;
+    };
+    None;
+  });
 
   let catLabel = cat => switch (cat) {
     | Tech => "Tech" | Marketing => "Marketing" | Sales => "Sales"
@@ -46,7 +65,55 @@ let make = (~onSelectSkill: string => unit, ~playbooks_only: bool) => {
           )}
         </p>
       </div>
+      {playbooks_only && !isAnonymous
+        ? <button className="btn-primary" onClick={_ => onCreatePlaybook(None)}>
+            {React.string("+ Create Playbook")}
+          </button>
+        : React.null}
     </div>
+
+    {playbooks_only && !isAnonymous && customSkills != []
+      ? <div className="custom-playbooks-section">
+          <h2 className="section-heading">{"Your Playbooks" |> React.string}</h2>
+          <div className="role-grid">
+            {customSkills
+             |> List.map((sk: skill_summary) =>
+                  <div key={sk.id} className={"custom-playbook-row " ++ catColor(sk.category)}>
+                    <button
+                      className={"role-card role-card-custom " ++ catColor(sk.category)}
+                      onClick={_ => onSelectSkill(sk.id)}>
+                      <div className="role-card-cat">
+                        {React.string(catLabel(sk.category))}
+                        <span className="custom-badge">{"Custom" |> React.string}</span>
+                      </div>
+                      <div className="role-card-name">{React.string(sk.name)}</div>
+                      <div className="role-card-desc">
+                        {React.string(
+                          String.length(sk.description) > 110
+                            ? String.sub(sk.description, 0, 110) ++ "..."
+                            : sk.description
+                        )}
+                      </div>
+                      <div className="role-card-meta">
+                        <span>{React.string(string_of_int(sk.criteria_count) ++ " criteria")}</span>
+                        <span className="role-card-arrow">{React.string({js|→|js})}</span>
+                      </div>
+                    </button>
+                    {!isAnonymous
+                      ? <button
+                          className="btn-ghost custom-edit-btn"
+                          onClick={_ => onCreatePlaybook(Some(sk.id))}>
+                          {"Edit" |> React.string}
+                        </button>
+                      : React.null}
+                  </div>
+                )
+             |> Array.of_list
+             |> React.array}
+          </div>
+        </div>
+      : React.null}
+
     <div className="picker-controls">
       <div className="search-wrap">
         <input

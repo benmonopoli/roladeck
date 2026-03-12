@@ -124,6 +124,16 @@ type sourcing_result = {
   strings : sourcing_string list;
 }
 
+(* ── Trust Verification ── *)
+
+type trust_status = TrustPending | TrustClean | TrustSuspicious
+
+type trust_check = {
+  trust_status : trust_status;
+  trust_flags  : string list;
+  checked_at   : string;
+}
+
 (* ── Talent Pool ── *)
 
 type ats_stage =
@@ -152,6 +162,7 @@ type candidate_record = {
   updated_at : string;
   greenhouse_url : string option;
   greenhouse_application_id : string option;
+  trust_check : trust_check option;
 }
 
 type candidate_summary = {
@@ -166,6 +177,8 @@ type candidate_summary = {
   role_count : int;
   scored_role_ids : string list;
   created_at : string;
+  trust_status : trust_status;
+  trust_flags  : string list;
 }
 
 type pool_save_request = {

@@ -9,7 +9,8 @@ type view =
   | AiSourcing
   | Settings
   | Login
-  | Signup;
+  | Signup
+  | PlaybookEditor(option(string));
 
 type authState =
   | Checking
@@ -193,7 +194,9 @@ let make = () => {
            | RoleGuide("") =>
              <Components.SkillsBrowser
                onSelectSkill={id => setView(_ => RoleGuide(id))}
+               onCreatePlaybook={id => setView(_ => PlaybookEditor(id))}
                playbooks_only=true
+               isAnonymous
              />
            | RoleGuide(id) =>
              <Components.SkillDetail
@@ -222,6 +225,13 @@ let make = () => {
            | Settings =>
              isAnonymous ? authGate("Settings") :
              <Components.Settings />
+           | PlaybookEditor(editId) =>
+             isAnonymous ? authGate("Playbook Editor") :
+             <Components.PlaybookEditor
+               editId
+               onBack={() => setView(_ => RoleGuide(""))}
+               onSaved={id => setView(_ => RoleGuide(id))}
+             />
            | Login => React.null
            | Signup => React.null
            }}

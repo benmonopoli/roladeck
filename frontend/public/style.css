@@ -1034,6 +1034,15 @@ a:hover { text-decoration: underline; }
 }
 .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
 .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
+.btn-secondary {
+  padding: 9px 18px; font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--rule-strong);
+  color: var(--ink-2); border-radius: var(--radius-sm);
+  background: var(--cream);
+  transition: border-color .12s, color .12s, background .12s;
+}
+.btn-secondary:hover { border-color: var(--ink-2); background: var(--cream-dark); }
+.btn-secondary:disabled { opacity: .5; cursor: not-allowed; }
 
 .copy-btn {
   padding: 4px 10px; font-size: 11px; font-weight: 600;
@@ -1794,3 +1803,102 @@ a:hover { text-decoration: underline; }
 .auth-gate-hl-blue:hover {
   background: linear-gradient(transparent 48%, rgba(60,140,255,.65) 48%);
 }
+
+/* ── Trust Verification ── */
+
+/* Pool row inline dots */
+.trust-dot {
+  display: inline-block; width: 10px; height: 10px;
+  border-radius: 50%; margin-right: 6px; flex-shrink: 0; vertical-align: middle;
+}
+.trust-dot-star {
+  background: var(--yellow-dark); border-radius: 2px;
+  clip-path: polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+}
+.trust-dot-red    { background: var(--red); }
+.trust-dot-circle { background: var(--red); border: 2px solid var(--red-light); }
+
+/* Candidate detail header — needs relative for absolute badge */
+.candidate-header { position: relative; }
+
+/* Corner badge */
+.trust-badge {
+  position: absolute; top: 14px; right: 16px;
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: .04em;
+}
+.trust-badge-star    { background: var(--yellow); color: var(--ink); }
+.trust-badge-sticker { background: var(--red-light); color: var(--red); border: 1px solid var(--red); }
+.trust-badge-circle  {
+  background: var(--red-light); color: var(--red); border: 1px solid var(--red);
+  border-radius: 50%; width: 34px; height: 34px; padding: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+
+/* Trust flags panel */
+.trust-flags {
+  background: var(--red-light); border: 1px solid var(--red);
+  border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px;
+}
+.trust-flags-title { font-weight: 700; font-size: 13px; color: var(--red); margin-bottom: 8px; }
+.trust-flag-item {
+  font-size: 13px; color: var(--ink); padding: 5px 0;
+  border-top: 1px solid rgba(198,40,40,.15);
+}
+.trust-flag-item:first-of-type { border-top: none; }
+
+/* ── Custom Playbooks ── */
+
+/* Badge on custom skill cards */
+.custom-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: .05em;
+  background: var(--ink-soft, #e8e8e8); color: var(--ink); padding: 2px 7px;
+  border-radius: 10px; vertical-align: middle; margin-left: 6px;
+}
+
+/* Custom playbook row wraps the card + edit button */
+.custom-playbooks-section { margin-bottom: 32px; }
+.custom-playbooks-section .section-heading {
+  font-size: 14px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase;
+  letter-spacing: .06em; margin-bottom: 12px;
+}
+.custom-playbook-row { position: relative; display: flex; align-items: flex-start; gap: 8px; }
+.role-card-custom { flex: 1; text-align: left; }
+.custom-edit-btn { flex-shrink: 0; align-self: center; font-size: 12px; padding: 4px 10px; }
+
+/* Playbook editor */
+.playbook-editor { max-width: 640px; }
+.editor-field { margin-bottom: 20px; }
+.editor-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.editor-field input, .editor-field textarea, .editor-field select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 14px; background: var(--surface);
+  box-sizing: border-box;
+}
+.editor-field textarea { min-height: 72px; resize: vertical; }
+.criteria-list { display: flex; flex-direction: column; gap: 8px; }
+.criteria-row { display: flex; gap: 8px; align-items: center; }
+.criteria-row input { flex: 1; }
+.criteria-row select { width: 180px; flex-shrink: 0; }
+.btn-remove {
+  background: none; border: none; color: var(--red); cursor: pointer;
+  font-size: 18px; padding: 0 4px; line-height: 1; flex-shrink: 0;
+}
+.btn-add-row { font-size: 13px; margin-top: 8px; }
+.editor-actions { display: flex; gap: 12px; margin-top: 28px; }
+
+/* Import tabs */
+.import-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
+.import-tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 8px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+  color: var(--ink-muted); margin-bottom: -2px;
+}
+.import-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+.import-tab-panel { padding-top: 8px; }
+.import-desc { font-size: 13px; color: var(--ink-muted); margin-bottom: 14px; }
+.template-link { font-size: 13px; font-weight: 600; margin-bottom: 16px; display: inline-block; }
+.import-file-input { margin-bottom: 12px; }
+.import-url-row { display: flex; gap: 8px; }
+.import-url-row input { flex: 1; }
+.import-error { font-size: 13px; color: var(--red); margin-top: 10px; }

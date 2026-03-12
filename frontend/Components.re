@@ -9,3 +9,4 @@ module Settings       = Roladeck_frontend_components.Settings;
 module HomeWidget     = Roladeck_frontend_components.HomeWidget;
 module Login          = Roladeck_frontend_components.Login;
 module Signup         = Roladeck_frontend_components.Signup;
+module PlaybookEditor = Roladeck_frontend_components.PlaybookEditor;

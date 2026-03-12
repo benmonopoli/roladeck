@@ -29,6 +29,7 @@ let sourcing_sessions_file cid = Filename.concat (tenant_dir cid) "sourcing_sess
 let integration_settings_file cid = Filename.concat (tenant_dir cid) "integration_settings.json"
 let company_profile_file cid = Filename.concat (tenant_dir cid) "company_profile.json"
 let greenhouse_sync_state_file cid = Filename.concat (tenant_dir cid) "greenhouse_sync_state.json"
+let custom_skills_file cid = Filename.concat (tenant_dir cid) "custom_skills.json"
 
 (* ── Global auth file paths ── *)
 
@@ -291,6 +292,44 @@ let get_by_skill ~company_id (criterion_text : string) : skill_match list =
     ) c.scores
   ) pool
   |> List.sort (fun a b -> Float.compare b.overall_score a.overall_score)
+
+(* ── Custom Skills ── *)
+
+let load_custom_skills ~company_id () : skill_record list =
+  let f = custom_skills_file company_id in
+  if not (Sys.file_exists f) then []
+  else
+    try
+      let json = Yojson.Safe.from_file f in
+      match json with
+      | `List items ->
+        List.filter_map (fun item ->
+          match skill_record_of_yojson item with
+          | Ok s -> Some s
+          | Error _ -> None
+        ) items
+      | _ -> []
+    with _ -> []
+
+let save_custom_skills ~company_id (skills : skill_record list) : unit =
+  let json = `List (List.map skill_record_to_yojson skills) in
+  save_json_file (custom_skills_file company_id) json
+
+let upsert_custom_skill ~company_id (s : skill_record) : unit =
+  let skills = load_custom_skills ~company_id () in
+  let exists = List.exists (fun (x : skill_record) -> x.id = s.id) skills in
+  let updated =
+    if exists then List.map (fun (x : skill_record) -> if x.id = s.id then s else x) skills
+    else skills @ [s]
+  in
+  save_custom_skills ~company_id updated
+
+let delete_custom_skill ~company_id id : unit =
+  let skills = load_custom_skills ~company_id () in
+  save_custom_skills ~company_id (List.filter (fun (s : skill_record) -> s.id <> id) skills)
+
+let find_custom_skill ~company_id id =
+  List.find_opt (fun (s : skill_record) -> s.id = id) (load_custom_skills ~company_id ())
 
 (* ── Auth: Users ── *)
 
