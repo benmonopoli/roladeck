@@ -5,18 +5,6 @@ let tier_weight = function
   | T2_Differentiator -> 0.6
   | T3_RareUpside -> 0.2
 
-(** Ahrefs-specific enrichment: extra criteria added at score time *)
-let roladeck_enrichments = [
-  ("tech-hiring-backend-engineering",
-   [{ text = "Functional programming (OCaml, Haskell, F#)"; tier = T2_Differentiator }]);
-  ("tech-hiring-search-crawler-infrastructure",
-   [{ text = "OCaml production experience"; tier = T3_RareUpside }]);
-]
-
-let apply_enrichment discipline_id base_criteria =
-  match List.assoc_opt discipline_id roladeck_enrichments with
-  | None -> base_criteria
-  | Some extra -> base_criteria @ extra
 
 (** Tokenize text: lowercase, split on non-alphanumeric, keep words >= 3 chars *)
 let tokenize s =
@@ -251,7 +239,7 @@ let compute_calibration (pool : candidate_record list) (role_id : string) : role
 
 (** Main scoring entry point *)
 let score_candidate (skill : skill_record) (req : scoring_request) =
-  let criteria = apply_enrichment req.discipline_id skill.criteria in
+  let criteria = skill.criteria in
   let criterion_results =
     List.map (fun criterion ->
       let met, matched_keywords = criterion_met criterion req.candidate_notes in
