@@ -1,4 +1,4 @@
-open Ahrefs_types.Types
+open Roladeck_types.Types
 
 let tier_weight = function
   | T1_MustHave -> 1.0
@@ -6,7 +6,7 @@ let tier_weight = function
   | T3_RareUpside -> 0.2
 
 (** Ahrefs-specific enrichment: extra criteria added at score time *)
-let ahrefs_enrichments = [
+let roladeck_enrichments = [
   ("tech-hiring-backend-engineering",
    [{ text = "Functional programming (OCaml, Haskell, F#)"; tier = T2_Differentiator }]);
   ("tech-hiring-search-crawler-infrastructure",
@@ -14,7 +14,7 @@ let ahrefs_enrichments = [
 ]
 
 let apply_enrichment discipline_id base_criteria =
-  match List.assoc_opt discipline_id ahrefs_enrichments with
+  match List.assoc_opt discipline_id roladeck_enrichments with
   | None -> base_criteria
   | Some extra -> base_criteria @ extra
 

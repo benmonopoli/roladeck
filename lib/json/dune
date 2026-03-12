@@ -1,4 +1,4 @@
 (library
- (name ahrefs_json)
+ (name roladeck_json)
  (modules types_j)
- (libraries ahrefs_types yojson))
+ (libraries roladeck_types yojson))

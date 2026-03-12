@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 let handleFileRead : (React.Event.Form.t, (string => unit)) => unit = [%raw {|
   function(e, cb) {
@@ -32,10 +32,10 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
   let (suggestions, setSuggestions) = React.useState(() => []);
 
   React.useEffect0(() => {
-    Ahrefs_frontend_api.Api.getSkills()
+    Roladeck_frontend_api.Api.getSkills()
     |> Js.Promise.then_(all => {
       let playbooks = List.filter(
-        (s: skill_summary) => Ahrefs_frontend_api.Api.isRolePlaybook(s.id),
+        (s: skill_summary) => Roladeck_frontend_api.Api.isRolePlaybook(s.id),
         all
       );
       setSkills(_ => playbooks);
@@ -104,7 +104,7 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
     if (String.length(trimmed) > 0) {
       setFetchingUrl(_ => true);
       setFetchMsg(_ => None);
-      Ahrefs_frontend_api.Api.fetchUrl(trimmed)
+      Roladeck_frontend_api.Api.fetchUrl(trimmed)
       |> Js.Promise.then_(text => {
         setNotes(_ => text);
         setFetchingUrl(_ => false);
@@ -125,7 +125,7 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
     if (String.length(String.trim(notes)) >= 30) {
       setDetecting(_ => true);
       setSuggestions(_ => []);
-      Ahrefs_frontend_api.Api.classifyCandidate(~candidateNotes=notes)
+      Roladeck_frontend_api.Api.classifyCandidate(~candidateNotes=notes)
       |> Js.Promise.then_(matches => {
         setSuggestions(_ => matches);
         setDetecting(_ => false);
@@ -144,7 +144,7 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
     if (roleId != "" && notes != "") {
       setLoading(_ => true);
       setResult(_ => None);
-      Ahrefs_frontend_api.Api.saveToPool(
+      Roladeck_frontend_api.Api.saveToPool(
         ~name=candidateName,
         ~disciplineId=roleId,
         ~seniority,
@@ -325,7 +325,7 @@ let make = (~initialRoleId: option(string), ~onSaved: string => unit) => {
             {suggestions != []
               ? <div className="suggest-chips">
                   {suggestions
-                   |> List.map((m: Ahrefs_frontend_api.Api.playbookMatch) =>
+                   |> List.map((m: Roladeck_frontend_api.Api.playbookMatch) =>
                         <button
                           key={m.playbook_id}
                           type_="button"

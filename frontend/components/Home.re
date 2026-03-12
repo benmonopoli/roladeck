@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 [@react.component]
 let make = (
@@ -16,13 +16,13 @@ let make = (
   let (integrations, setIntegrations) = React.useState(() => None);
 
   React.useEffect0(() => {
-    Ahrefs_frontend_api.Api.getPoolStats()
+    Roladeck_frontend_api.Api.getPoolStats()
     |> Js.Promise.then_(s => {
       setStats(_ => Some(s));
       Js.Promise.resolve();
     })
     |> ignore;
-    Ahrefs_frontend_api.Api.getIntegrationSettings()
+    Roladeck_frontend_api.Api.getIntegrationSettings()
     |> Js.Promise.then_(cfg => {
       setIntegrations(_ => Some(cfg));
       Js.Promise.resolve();

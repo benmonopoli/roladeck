@@ -1,5 +1,5 @@
 [@react.component]
-let make = (~onLogin: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoSignup: unit => unit, ~onGoHome: unit => unit) => {
+let make = (~onLogin: Roladeck_frontend_api.Api.userInfo => unit, ~onGoSignup: unit => unit, ~onGoHome: unit => unit) => {
   let (email, setEmail)       = React.useState(() => "");
   let (password, setPassword) = React.useState(() => "");
   let (loading, setLoading)   = React.useState(() => false);
@@ -11,7 +11,7 @@ let make = (~onLogin: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoSignup: uni
     } else {
       setLoading(_ => true);
       setError(_ => "");
-      Ahrefs_frontend_api.Api.login(~email, ~password)
+      Roladeck_frontend_api.Api.login(~email, ~password)
       |> Js.Promise.then_(user => {
         setLoading(_ => false);
         onLogin(user);

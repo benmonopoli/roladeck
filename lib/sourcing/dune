@@ -1,5 +1,5 @@
 (library
- (name ahrefs_sourcing)
+ (name roladeck_sourcing)
  (modules sourcing)
  (modes native melange)
- (libraries ahrefs_types))
+ (libraries roladeck_types))

@@ -157,15 +157,15 @@ let run_agentic_loop ~system ~user_prompt ?(api_key = "") () =
 let run_ai ?(company_id = "") ~system ~user_prompt () =
   let provider =
     if String.length company_id > 0 then
-      let s = Ahrefs_storage.Storage.load_integration_settings ~company_id () in
-      s.Ahrefs_types.Types.ai_provider
+      let s = Roladeck_storage.Storage.load_integration_settings ~company_id () in
+      s.Roladeck_types.Types.ai_provider
     else
       Sys.getenv_opt "AI_PROVIDER" |> Option.value ~default:"anthropic"
   in
   let api_key =
     if String.length company_id > 0 then
-      let s = Ahrefs_storage.Storage.load_integration_settings ~company_id () in
-      s.Ahrefs_types.Types.ai_api_key
+      let s = Roladeck_storage.Storage.load_integration_settings ~company_id () in
+      s.Roladeck_types.Types.ai_api_key
     else ""
   in
   match provider with

@@ -1,7 +1,7 @@
 (library
- (name ahrefs_skills_data)
+ (name roladeck_skills_data)
  (modules skills_registry)
- (libraries ahrefs_types))
+ (libraries roladeck_types))
 
 ; Run `dune build @gen-skills` to regenerate skills_registry.ml from SKILL.md files
 (rule

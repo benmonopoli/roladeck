@@ -1,8 +1,8 @@
 (library
- (name ahrefs_sync)
+ (name roladeck_sync)
  (modules greenhouse_sync)
  (libraries
-   ahrefs_types ahrefs_json ahrefs_storage
-   ahrefs_greenhouse ahrefs_scoring ahrefs_skills_data ahrefs_ai
+   roladeck_types roladeck_json roladeck_storage
+   roladeck_greenhouse roladeck_scoring roladeck_skills_data roladeck_ai
    lwt yojson unix cohttp-lwt-unix)
  (preprocess (pps lwt_ppx)))

@@ -1,14 +1,15 @@
-open Ahrefs_types.Types
-open Ahrefs_json.Types_j
-open Ahrefs_skills_data.Skills_registry
-open Ahrefs_scoring.Scoring
-open Ahrefs_sourcing.Sourcing
-module Store = Ahrefs_storage.Storage
-module Auth = Ahrefs_auth.Auth
-module AiSourcing = Ahrefs_ai.Ai_sourcing
-module CompanyResearch = Ahrefs_ai.Company_research
-module Classify = Ahrefs_ai.Classify
-module GhSync = Ahrefs_sync.Greenhouse_sync
+open Roladeck_types.Types
+open Roladeck_json.Types_j
+open Roladeck_skills_data.Skills_registry
+open Roladeck_scoring.Scoring
+open Roladeck_sourcing.Sourcing
+module Store = Roladeck_storage.Storage
+module Auth = Roladeck_auth.Auth
+module AiSourcing = Roladeck_ai.Ai_sourcing
+module CompanyResearch = Roladeck_ai.Company_research
+module Classify = Roladeck_ai.Classify
+module Verify = Roladeck_ai.Verify
+module GhSync = Roladeck_sync.Greenhouse_sync
 
 let json_response ?(status = `OK) body =
   Lwt.return (Dream.response ~status ~headers:[("Content-Type", "application/json")] body)
@@ -30,7 +31,7 @@ let require_session req =
 (* ── Existing skill endpoints ── *)
 
 let handle_ping _req =
-  Dream.json {|{"status":"ok","service":"ahrefs-recruit"}|}
+  Dream.json {|{"status":"ok","service":"roladeck"}|}
 
 let handle_skills _req =
   let summaries = List.map skill_to_summary all_skills in
@@ -291,6 +292,7 @@ let handle_pool_save req =
            updated_at  = now;
            greenhouse_url = None;
            greenhouse_application_id = None;
+           trust_check = None;
          } in
          Store.upsert ~company_id record;
          Dream.json (Yojson.Safe.to_string (candidate_record_to_yojson record)))
@@ -325,6 +327,21 @@ let handle_pool_stage req =
            (Printf.sprintf {|{"error":"%s"}|} msg)
        | Ok updated ->
          Dream.json (Yojson.Safe.to_string (candidate_record_to_yojson updated)))
+
+let handle_verify_candidate req =
+  match require_session req with
+  | None -> Dream.respond ~status:`Unauthorized {|{"error":"Unauthorized"}|}
+  | Some session ->
+    let company_id = session.company_id in
+    let candidate_id = Dream.param req "id" in
+    (match Store.get_by_id ~company_id candidate_id with
+     | None -> json_response ~status:`Not_Found {|{"error":"Not found"}|}
+     | Some candidate ->
+       let%lwt tc = Verify.verify_candidate ~company_id ~candidate_notes:candidate.source_text in
+       let updated = { candidate with trust_check = Some tc; updated_at = Store.now_iso () } in
+       Store.upsert ~company_id updated;
+       let summary = Store.summary_of_record updated in
+       Dream.json (Yojson.Safe.to_string (candidate_summary_to_yojson summary)))
 
 let handle_calibration req =
   match require_session req with
@@ -455,7 +472,7 @@ let handle_save_integration_settings req =
     let company_id = session.company_id in
     let%lwt body = Dream.body req in
     let parse j =
-      let open Ahrefs_json.Types_j in
+      let open Roladeck_json.Types_j in
       let open Result in
       str_field j "greenhouse_subdomain" >>= fun greenhouse_subdomain ->
       str_field j "greenhouse_api_key"   >>= fun greenhouse_api_key ->
@@ -512,7 +529,7 @@ let handle_save_company_profile req =
     let company_id = session.company_id in
     let%lwt body = Dream.body req in
     let parse j =
-      let open Ahrefs_json.Types_j in
+      let open Roladeck_json.Types_j in
       let open Result in
       str_field j "company_name" >>= fun company_name ->
       list_field j "company_urls"

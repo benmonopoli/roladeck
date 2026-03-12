@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 [@react.component]
 let make = (~onSelectSkill: string => unit, ~playbooks_only: bool) => {
@@ -9,11 +9,11 @@ let make = (~onSelectSkill: string => unit, ~playbooks_only: bool) => {
 
   React.useEffect2(() => {
     setLoading(_ => true);
-    Ahrefs_frontend_api.Api.searchSkills(~q=query, ~category?, ())
+    Roladeck_frontend_api.Api.searchSkills(~q=query, ~category?, ())
     |> Js.Promise.then_(results => {
       let filtered = playbooks_only
-        ? List.filter((s: skill_summary) => Ahrefs_frontend_api.Api.isRolePlaybook(s.id), results)
-        : List.filter((s: skill_summary) => !Ahrefs_frontend_api.Api.isRolePlaybook(s.id), results);
+        ? List.filter((s: skill_summary) => Roladeck_frontend_api.Api.isRolePlaybook(s.id), results)
+        : List.filter((s: skill_summary) => !Roladeck_frontend_api.Api.isRolePlaybook(s.id), results);
       setSkills(_ => filtered);
       setLoading(_ => false);
       Js.Promise.resolve();

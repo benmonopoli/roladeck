@@ -1,5 +1,5 @@
-open Ahrefs_types.Types
-open Ahrefs_json.Types_j
+open Roladeck_types.Types
+open Roladeck_json.Types_j
 
 let () = Random.self_init ()
 
@@ -123,6 +123,12 @@ let summary_of_record (c : candidate_record) : candidate_summary =
     role_count = List.length distinct_roles;
     scored_role_ids = distinct_roles;
     created_at = c.created_at;
+    trust_status = (match c.trust_check with
+      | None -> TrustPending
+      | Some tc -> tc.trust_status);
+    trust_flags = (match c.trust_check with
+      | None -> []
+      | Some tc -> tc.trust_flags);
   }
 
 let contains_sub s sub =

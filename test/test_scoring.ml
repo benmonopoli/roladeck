@@ -1,5 +1,5 @@
-open Ahrefs_types.Types
-open Ahrefs_scoring.Scoring
+open Roladeck_types.Types
+open Roladeck_scoring.Scoring
 
 (** Build a minimal skill_record for testing *)
 let make_skill id criteria red_flags =
@@ -90,7 +90,7 @@ let test_t2_t3_only () =
     true
     (result.recommendation = StrongProgress || result.recommendation = Progress)
 
-let test_ahrefs_enrichment () =
+let test_roladeck_enrichment () =
   (* Backend engineering gets OCaml bonus *)
   let skill = make_skill "tech-hiring-backend-engineering" [
     { text = "REST API HTTP endpoints JSON"; tier = T1_MustHave };
@@ -147,7 +147,7 @@ let () =
       test_case "T2/T3 only, no gap" `Quick test_t2_t3_only;
     ];
     "enrichment", [
-      test_case "ahrefs OCaml enrichment" `Quick test_ahrefs_enrichment;
+      test_case "ahrefs OCaml enrichment" `Quick test_roladeck_enrichment;
     ];
     "criterion_results", [
       test_case "complete criterion list" `Quick test_criterion_results_complete;

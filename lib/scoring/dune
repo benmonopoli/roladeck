@@ -1,5 +1,5 @@
 (library
- (name ahrefs_scoring)
+ (name roladeck_scoring)
  (modules scoring)
  (modes native melange)
- (libraries ahrefs_types))
+ (libraries roladeck_types))

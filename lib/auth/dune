@@ -1,4 +1,4 @@
 (library
- (name ahrefs_auth)
+ (name roladeck_auth)
  (modules auth)
- (libraries ahrefs_types ahrefs_storage digestif kdf.pbkdf mirage-crypto-rng dream unix))
+ (libraries roladeck_types roladeck_storage digestif kdf.pbkdf mirage-crypto-rng dream unix))

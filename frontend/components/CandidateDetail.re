@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 [@react.component]
 let make = (~candidateId: string, ~onSelectRole: string => unit) => {
@@ -6,13 +6,26 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
   let (loading, setLoading) = React.useState(() => true);
   let (stageUpdating, setStageUpdating) = React.useState(() => false);
   let (copied, setCopied) = React.useState(() => false);
+  let (verifying, setVerifying) = React.useState(() => false);
+  let (trustStatus, setTrustStatus) = React.useState(() => TrustPending);
+  let (trustFlags, setTrustFlags) = React.useState(() => []);
 
   React.useEffect1(() => {
     setLoading(_ => true);
-    Ahrefs_frontend_api.Api.getCandidate(candidateId)
+    Roladeck_frontend_api.Api.getCandidate(candidateId)
     |> Js.Promise.then_(r => {
       setCandidate(_ => r);
       setLoading(_ => false);
+      (switch (r) {
+       | Some(c) =>
+         let (st, fl) = switch (c.trust_check) {
+           | None => (TrustPending, [])
+           | Some(tc) => (tc.trust_status, tc.trust_flags)
+         };
+         setTrustStatus(_ => st);
+         setTrustFlags(_ => fl);
+       | None => ()
+       });
       Js.Promise.resolve();
     })
     |> ignore;
@@ -67,7 +80,7 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
   let handleStageChange = (c: candidate_record, newStageStr) => {
     let newStage = parseStage(newStageStr);
     setStageUpdating(_ => true);
-    Ahrefs_frontend_api.Api.updateStage(c.id, newStage)
+    Roladeck_frontend_api.Api.updateStage(c.id, newStage)
     |> Js.Promise.then_(r => {
       setCandidate(_ => r);
       setStageUpdating(_ => false);
@@ -97,7 +110,7 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
         ];
       }, cs.criterion_results);
     }, c.scores);
-    let _ = Ahrefs_frontend_api.Api.Clipboard.writeText(String.concat("\n", lines^));
+    let _ = Roladeck_frontend_api.Api.Clipboard.writeText(String.concat("\n", lines^));
     setCopied(_ => true);
     let _ = Js.Global.setTimeout(~f=() => setCopied(_ => false), 2000);
     ();
@@ -111,6 +124,19 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
     | Some(c) =>
       <div className="candidate-detail">
         <div className="candidate-header">
+          {let isExceptional = List.exists(
+              (cs: candidate_score) => cs.recommendation == StrongProgress,
+              c.scores
+            );
+           switch (trustStatus, isExceptional) {
+           | (TrustSuspicious, true) =>
+             <div className="trust-badge trust-badge-circle">{React.string({js|⚠|js})}</div>
+           | (TrustSuspicious, false) =>
+             <div className="trust-badge trust-badge-sticker">{React.string({js|⚠ Suspicious|js})}</div>
+           | (_, true) =>
+             <div className="trust-badge trust-badge-star">{React.string({js|★ Exceptional|js})}</div>
+           | _ => React.null
+           }}
           <div className="candidate-header-left">
             <h1 className="candidate-name">{React.string(c.name)}</h1>
             <span className="candidate-meta">
@@ -152,12 +178,40 @@ let make = (~candidateId: string, ~onSelectRole: string => unit) => {
               </select>
             </label>
             <button
+              className="btn-secondary btn-sm"
+              disabled=verifying
+              onClick={_ => {
+                setVerifying(_ => true);
+                Roladeck_frontend_api.Api.verifyCandidate(candidateId)
+                |> Js.Promise.then_(summary => {
+                  setTrustStatus(_ => summary.trust_status);
+                  setTrustFlags(_ => summary.trust_flags);
+                  setVerifying(_ => false);
+                  Js.Promise.resolve();
+                })
+                |> ignore;
+              }}>
+              {React.string(verifying ? "Checking..." : "Verify profile")}
+            </button>
+            <button
               className={"btn-ghost " ++ (copied ? "copied" : "")}
               onClick={_ => exportMarkdown(c)}>
               {React.string(copied ? "Copied!" : "Copy report")}
             </button>
           </div>
         </div>
+
+        {trustStatus == TrustSuspicious && trustFlags != []
+          ? <div className="trust-flags">
+              <div className="trust-flags-title">{React.string({js|⚠ Suspicious claims detected|js})}</div>
+              {trustFlags
+               |> List.mapi((i, flag) =>
+                    <div key={string_of_int(i)} className="trust-flag-item">{React.string(flag)}</div>
+                  )
+               |> Array.of_list
+               |> React.array}
+            </div>
+          : React.null}
 
         {c.scores == []
           ? <div className="empty-state">

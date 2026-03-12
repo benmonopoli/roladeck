@@ -1,4 +1,4 @@
-open Ahrefs_types.Types
+open Roladeck_types.Types
 
 let ( >>= ) = Result.bind
 
@@ -260,6 +260,35 @@ let sourcing_result_to_yojson (r : sourcing_result) =
     "strings", `List (List.map sourcing_string_to_yojson r.strings);
   ]
 
+(* ── Trust codecs ── *)
+
+let trust_status_to_yojson = function
+  | TrustPending    -> `String "pending"
+  | TrustClean      -> `String "clean"
+  | TrustSuspicious -> `String "suspicious"
+
+let trust_status_of_string = function
+  | "clean"      -> TrustClean
+  | "suspicious" -> TrustSuspicious
+  | _            -> TrustPending
+
+let trust_check_to_yojson (tc : trust_check) =
+  `Assoc [
+    "trust_status", trust_status_to_yojson tc.trust_status;
+    "trust_flags",  `List (List.map (fun s -> `String s) tc.trust_flags);
+    "checked_at",   `String tc.checked_at;
+  ]
+
+let trust_check_of_yojson j =
+  let open Result in
+  str_field j "trust_status" >>= fun st ->
+  let trust_status = trust_status_of_string st in
+  let trust_flags = match field j "trust_flags" with
+    | Ok (`List flags) -> List.filter_map (function `String s -> Some s | _ -> None) flags
+    | _ -> [] in
+  str_field j "checked_at" >>= fun checked_at ->
+  Ok { trust_status; trust_flags; checked_at }
+
 (* ── Pool codecs ── *)
 
 let ats_stage_to_yojson = function
@@ -352,6 +381,7 @@ let candidate_record_to_yojson (c : candidate_record) =
     "updated_at",  `String c.updated_at;
     "greenhouse_url", (match c.greenhouse_url with None -> `Null | Some s -> `String s);
     "greenhouse_application_id", (match c.greenhouse_application_id with None -> `Null | Some s -> `String s);
+    "trust_check", (match c.trust_check with None -> `Null | Some tc -> trust_check_to_yojson tc);
   ]
 
 let candidate_record_of_yojson j =
@@ -367,8 +397,11 @@ let candidate_record_of_yojson j =
     | Ok (`String s) -> Some s | _ -> None in
   let greenhouse_application_id = match field j "greenhouse_application_id" with
     | Ok (`String s) -> Some s | _ -> None in
+  let trust_check = match field j "trust_check" with
+    | Ok (`Assoc _ as tc_j) -> (match trust_check_of_yojson tc_j with Ok tc -> Some tc | _ -> None)
+    | _ -> None in
   Ok { id; name; ats_stage; scores; source_text; created_at; updated_at;
-       greenhouse_url; greenhouse_application_id }
+       greenhouse_url; greenhouse_application_id; trust_check }
 
 let candidate_summary_to_yojson (cs : candidate_summary) =
   `Assoc [
@@ -383,6 +416,8 @@ let candidate_summary_to_yojson (cs : candidate_summary) =
     "role_count",       `Int cs.role_count;
     "scored_role_ids",  `List (List.map (fun s -> `String s) cs.scored_role_ids);
     "created_at",       `String cs.created_at;
+    "trust_status",     trust_status_to_yojson cs.trust_status;
+    "trust_flags",      `List (List.map (fun s -> `String s) cs.trust_flags);
   ]
 
 let playbook_match_to_yojson (m : playbook_match) =

@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 type poolView =
   | Cards
@@ -15,17 +15,17 @@ let make = (~onSelectCandidate: string => unit, ~onGoScore: unit => unit) => {
   let (stageFilter, setStageFilter) = React.useState(() => None);
 
   React.useEffect0(() => {
-    Ahrefs_frontend_api.Api.getPool(~role="", ~q="", ())
+    Roladeck_frontend_api.Api.getPool(~role="", ~q="", ())
     |> Js.Promise.then_(candidates => {
       setPool(_ => candidates);
       setLoading(_ => false);
       Js.Promise.resolve();
     })
     |> ignore;
-    Ahrefs_frontend_api.Api.getSkills()
+    Roladeck_frontend_api.Api.getSkills()
     |> Js.Promise.then_(s => {
       setSkills(_ => List.filter(
-        (sk: skill_summary) => Ahrefs_frontend_api.Api.isRolePlaybook(sk.id), s
+        (sk: skill_summary) => Roladeck_frontend_api.Api.isRolePlaybook(sk.id), s
       ));
       Js.Promise.resolve();
     })
@@ -302,6 +302,15 @@ let make = (~onSelectCandidate: string => unit, ~onGoScore: unit => unit) => {
                       {List.length(c.scored_role_ids) > 1
                         ? <span className="pool-clip" title="Matched multiple playbooks" />
                         : React.null}
+                      {switch (c.trust_status, c.top_recommendation) {
+                        | (TrustSuspicious, StrongProgress) =>
+                          <span className="trust-dot trust-dot-circle" title="Exceptional but suspicious" />
+                        | (TrustSuspicious, _) =>
+                          <span className="trust-dot trust-dot-red" title="Flagged for review" />
+                        | (_, StrongProgress) =>
+                          <span className="trust-dot trust-dot-star" title="Exceptional candidate" />
+                        | _ => React.null
+                      }}
                       {React.string(c.name)}
                     </span>
                     <span className="pool-row-score">

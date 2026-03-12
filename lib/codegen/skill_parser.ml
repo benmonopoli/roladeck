@@ -1,4 +1,4 @@
-open Ahrefs_types.Types
+open Roladeck_types.Types
 
 (** Intermediate representation during parsing *)
 type parsed_skill = {

@@ -1,4 +1,4 @@
-open Ahrefs_types.Types
+open Roladeck_types.Types
 
 let contains_sub s sub =
   let n = String.length s and m = String.length sub in
@@ -28,7 +28,7 @@ let criteria_sample (criteria : skill_criterion list) tier n =
 
 let build_prompt (candidate_notes : string) =
   let playbooks =
-    Ahrefs_skills_data.Skills_registry.all_skills
+    Roladeck_skills_data.Skills_registry.all_skills
     |> List.filter is_playbook
   in
   let entries =
@@ -93,7 +93,7 @@ let extract_json text =
 (* Validate that a playbook_id exists in the registry *)
 let valid_ids =
   lazy (
-    Ahrefs_skills_data.Skills_registry.all_skills
+    Roladeck_skills_data.Skills_registry.all_skills
     |> List.filter is_playbook
     |> List.map (fun (s : skill_record) -> s.id)
   )

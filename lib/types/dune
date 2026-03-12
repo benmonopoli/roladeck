@@ -1,4 +1,4 @@
 (library
- (name ahrefs_types)
+ (name roladeck_types)
  (modules types)
  (modes native melange))

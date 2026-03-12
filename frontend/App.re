@@ -14,7 +14,7 @@ type view =
 type authState =
   | Checking
   | Anonymous
-  | LoggedIn(Ahrefs_frontend_api.Api.userInfo);
+  | LoggedIn(Roladeck_frontend_api.Api.userInfo);
 
 [@react.component]
 let make = () => {
@@ -23,14 +23,14 @@ let make = () => {
   let (authState, setAuthState)         = React.useState(() => Checking);
 
   React.useEffect0(() => {
-    Ahrefs_frontend_api.Api.getMe()
+    Roladeck_frontend_api.Api.getMe()
     |> Js.Promise.then_(result => {
       switch (result) {
       | Some(user) =>
         setAuthState(_ => LoggedIn(user));
-        Ahrefs_frontend_api.Api.getCompanyProfile()
+        Roladeck_frontend_api.Api.getCompanyProfile()
         |> Js.Promise.then_(p => {
-          setCompanyConfigured(_ => String.length(p.Ahrefs_frontend_api.Api.company_name) > 0);
+          setCompanyConfigured(_ => String.length(p.Roladeck_frontend_api.Api.company_name) > 0);
           Js.Promise.resolve();
         })
         |> ignore;
@@ -76,7 +76,7 @@ let make = () => {
     </div>;
 
   let handleLogout = _ => {
-    Ahrefs_frontend_api.Api.logout()
+    Roladeck_frontend_api.Api.logout()
     |> Js.Promise.then_(_ => {
       setAuthState(_ => Anonymous);
       setView(_ => Home);
@@ -97,9 +97,9 @@ let make = () => {
       <Components.Login
         onLogin={user => {
           setAuthState(_ => LoggedIn(user));
-          Ahrefs_frontend_api.Api.getCompanyProfile()
+          Roladeck_frontend_api.Api.getCompanyProfile()
           |> Js.Promise.then_(p => {
-            setCompanyConfigured(_ => String.length(p.Ahrefs_frontend_api.Api.company_name) > 0);
+            setCompanyConfigured(_ => String.length(p.Roladeck_frontend_api.Api.company_name) > 0);
             Js.Promise.resolve();
           })
           |> ignore;

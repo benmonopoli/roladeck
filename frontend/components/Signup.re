@@ -1,5 +1,5 @@
 [@react.component]
-let make = (~onSignup: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoLogin: unit => unit, ~onGoHome: unit => unit) => {
+let make = (~onSignup: Roladeck_frontend_api.Api.userInfo => unit, ~onGoLogin: unit => unit, ~onGoHome: unit => unit) => {
   let (companyName, setCompanyName) = React.useState(() => "");
   let (email, setEmail)             = React.useState(() => "");
   let (password, setPassword)       = React.useState(() => "");
@@ -17,7 +17,7 @@ let make = (~onSignup: Ahrefs_frontend_api.Api.userInfo => unit, ~onGoLogin: uni
     } else {
       setLoading(_ => true);
       setError(_ => "");
-      Ahrefs_frontend_api.Api.signup(~email, ~password, ~companyName)
+      Roladeck_frontend_api.Api.signup(~email, ~password, ~companyName)
       |> Js.Promise.then_(user => {
         setLoading(_ => false);
         onSignup(user);

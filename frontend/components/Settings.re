@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 [@react.component]
 let make = () => {
@@ -35,23 +35,23 @@ let make = () => {
   let (syncing, setSyncing)       = React.useState(() => false);
 
   React.useEffect0(() => {
-    Ahrefs_frontend_api.Api.getCompanyProfile()
+    Roladeck_frontend_api.Api.getCompanyProfile()
     |> Js.Promise.then_(p => {
-      setCompanyName(_ => p.Ahrefs_frontend_api.Api.company_name);
-      setCompanyUrls(_ => String.concat("\n", p.Ahrefs_frontend_api.Api.company_urls));
-      setCompanyBrief(_ => p.Ahrefs_frontend_api.Api.company_brief);
-      setBriefAt(_ => p.Ahrefs_frontend_api.Api.brief_generated_at);
+      setCompanyName(_ => p.Roladeck_frontend_api.Api.company_name);
+      setCompanyUrls(_ => String.concat("\n", p.Roladeck_frontend_api.Api.company_urls));
+      setCompanyBrief(_ => p.Roladeck_frontend_api.Api.company_brief);
+      setBriefAt(_ => p.Roladeck_frontend_api.Api.brief_generated_at);
       Js.Promise.resolve();
     })
     |> ignore;
-    Ahrefs_frontend_api.Api.getSettingsStatus()
+    Roladeck_frontend_api.Api.getSettingsStatus()
     |> Js.Promise.then_(s => {
-      setAnthropicSet(_ => s.Ahrefs_types.Types.anthropic_key_set);
-      setGhConfigured(_ => s.Ahrefs_types.Types.greenhouse_configured);
+      setAnthropicSet(_ => s.Roladeck_types.Types.anthropic_key_set);
+      setGhConfigured(_ => s.Roladeck_types.Types.greenhouse_configured);
       Js.Promise.resolve();
     })
     |> ignore;
-    Ahrefs_frontend_api.Api.getIntegrationSettings()
+    Roladeck_frontend_api.Api.getIntegrationSettings()
     |> Js.Promise.then_(s => {
       setSubdomain(_ => s.greenhouse_subdomain);
       setApiKeyHint(_ => s.greenhouse_api_key_hint);
@@ -62,7 +62,7 @@ let make = () => {
       Js.Promise.resolve();
     })
     |> ignore;
-    Ahrefs_frontend_api.Api.getGreenhouseSyncStatus()
+    Roladeck_frontend_api.Api.getGreenhouseSyncStatus()
     |> Js.Promise.then_(s => {
       setSyncStatus(_ => Some(s));
       Js.Promise.resolve();
@@ -77,7 +77,7 @@ let make = () => {
       |> List.filter(s => String.length(s) > 0);
     setResearchLoading(_ => true);
     setResearchMsg(_ => None);
-    Ahrefs_frontend_api.Api.saveAndResearchCompany(~name=companyName, ~urls)
+    Roladeck_frontend_api.Api.saveAndResearchCompany(~name=companyName, ~urls)
     |> Js.Promise.then_(_ => {
       setResearchLoading(_ => false);
       setResearchMsg(_ => Some("Research started. The brief will be ready in ~30 seconds."));
@@ -95,7 +95,7 @@ let make = () => {
   let handleSaveIntegrations = _ => {
     setSaving(_ => true);
     setSaveMsg(_ => None);
-    Ahrefs_frontend_api.Api.saveIntegrationSettings(
+    Roladeck_frontend_api.Api.saveIntegrationSettings(
       ~subdomain, ~apiKey, ~aiProvider, ~aiApiKey=""
     )
     |> Js.Promise.then_(ok => {
@@ -114,7 +114,7 @@ let make = () => {
   let handleSaveAi = _ => {
     setAiSaving(_ => true);
     setAiSaveMsg(_ => None);
-    Ahrefs_frontend_api.Api.saveIntegrationSettings(
+    Roladeck_frontend_api.Api.saveIntegrationSettings(
       ~subdomain, ~apiKey, ~aiProvider, ~aiApiKey
     )
     |> Js.Promise.then_(ok => {
@@ -132,11 +132,11 @@ let make = () => {
 
   let handleSyncNow = _ => {
     setSyncing(_ => true);
-    Ahrefs_frontend_api.Api.triggerGreenhouseSync()
+    Roladeck_frontend_api.Api.triggerGreenhouseSync()
     |> Js.Promise.then_(_ => {
       /* Re-fetch status after a short delay to show updated count */
       let _ = Js.Global.setTimeout(~f=() => {
-        Ahrefs_frontend_api.Api.getGreenhouseSyncStatus()
+        Roladeck_frontend_api.Api.getGreenhouseSyncStatus()
         |> Js.Promise.then_(s => {
           setSyncStatus(_ => Some(s));
           setSyncing(_ => false);
@@ -157,7 +157,7 @@ let make = () => {
   let handleTestGreenhouse = _ => {
     setTesting(_ => true);
     setTestResult(_ => None);
-    Ahrefs_frontend_api.Api.testGreenhouseConnection()
+    Roladeck_frontend_api.Api.testGreenhouseConnection()
     |> Js.Promise.then_(((ok, err)) => {
       setTesting(_ => false);
       setTestResult(_ => Some((ok, err)));
@@ -406,10 +406,10 @@ let make = () => {
                      | Some(s) =>
                        <span className="sync-status-text">
                          {React.string(
-                           switch (s.Ahrefs_frontend_api.Api.last_synced_at) {
+                           switch (s.Roladeck_frontend_api.Api.last_synced_at) {
                            | None => "Not yet synced"
                            | Some(t) =>
-                             string_of_int(s.Ahrefs_frontend_api.Api.total_synced) ++
+                             string_of_int(s.Roladeck_frontend_api.Api.total_synced) ++
                              " candidates imported  -  last synced " ++
                              String.sub(t, 0, min(10, String.length(t)))
                            }
@@ -418,7 +418,7 @@ let make = () => {
                      }}
                     {switch (syncStatus) {
                      | Some(s) =>
-                       switch (s.Ahrefs_frontend_api.Api.last_error) {
+                       switch (s.Roladeck_frontend_api.Api.last_error) {
                        | Some(e) =>
                          <span className="status-badge status-err">{React.string("Error: " ++ e)}</span>
                        | None => React.null

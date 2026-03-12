@@ -1,5 +1,5 @@
 (lang dune 3.14)
 
-(name ahrefs_recruit)
+(name roladeck_recruit)
 
 (using melange 0.1)

@@ -21,7 +21,7 @@ let auth_middleware inner_handler req =
   in
   if is_public then inner_handler req
   else
-    match Ahrefs_auth.Auth.get_session req with
+    match Roladeck_auth.Auth.get_session req with
     | None -> Dream.respond ~status:`Unauthorized {|{"error":"Unauthorized"}|}
     | Some _ -> inner_handler req
 
@@ -44,6 +44,7 @@ let routes = Dream.router [
   Dream.post "/api/pool"                handle_pool_save;
   Dream.get  "/api/pool/:id"            handle_pool_get;
   Dream.put  "/api/pool/:id/stage"      handle_pool_stage;
+  Dream.post "/api/candidates/:id/verify" handle_verify_candidate;
   Dream.get  "/api/calibration/:role_id" handle_calibration;
   (* AI Sourcing + Classify *)
   Dream.post "/api/ai/source"    handle_ai_source;

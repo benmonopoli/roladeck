@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 type tab = Guide | Score | Source | Pool;
 
@@ -30,7 +30,7 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
 
   React.useEffect1(() => {
     setLoading(_ => true);
-    Ahrefs_frontend_api.Api.getSkill(skillId)
+    Roladeck_frontend_api.Api.getSkill(skillId)
     |> Js.Promise.then_(result => {
       setSkill(_ => result);
       setLoading(_ => false);
@@ -46,7 +46,7 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
     if (tab == Pool) {
       setPoolLoading(_ => true);
       setMatchedCandidates(_ => []);
-      Ahrefs_frontend_api.Api.getPool(~role=skillId, ())
+      Roladeck_frontend_api.Api.getPool(~role=skillId, ())
       |> Js.Promise.then_(candidates => {
         setMatchedCandidates(_ => candidates);
         setPoolLoading(_ => false);
@@ -122,7 +122,7 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
     setScoreLoading(_ => true);
     setScoreResult(_ => None);
     setSavedId(_ => None);
-    Ahrefs_frontend_api.Api.saveToPool(
+    Roladeck_frontend_api.Api.saveToPool(
       ~name=candidateName,
       ~disciplineId=skillRecord.discipline.id,
       ~seniority=scoreSeniority,
@@ -174,7 +174,7 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
       seniority: sourceSeniority,
       platform,
     };
-    Ahrefs_frontend_api.Api.getSourceStrings(q)
+    Roladeck_frontend_api.Api.getSourceStrings(q)
     |> Js.Promise.then_(r => {
       setSourceResult(_ => r);
       setSourceLoading(_ => false);
@@ -184,7 +184,7 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
   };
 
   let copyQuery = (label, query) => {
-    let _ = Ahrefs_frontend_api.Clipboard.writeText(query);
+    let _ = Roladeck_frontend_api.Clipboard.writeText(query);
     setCopied(_ => Some(label));
     let _ = Js.Global.setTimeout(~f=() => setCopied(_ => None), 2000);
     ();
@@ -212,7 +212,7 @@ let make = (~skillId: string, ~onBack: unit => unit, ~onScore as _onScore: strin
       ],
       r.criterion_results
     );
-    let _ = Ahrefs_frontend_api.Clipboard.writeText(String.concat("\n", lines^));
+    let _ = Roladeck_frontend_api.Clipboard.writeText(String.concat("\n", lines^));
     ();
   };
 

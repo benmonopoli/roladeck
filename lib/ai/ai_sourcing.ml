@@ -1,6 +1,6 @@
-open Ahrefs_types.Types
-open Ahrefs_json.Types_j
-open Ahrefs_skills_data.Skills_registry
+open Roladeck_types.Types
+open Roladeck_json.Types_j
+open Roladeck_skills_data.Skills_registry
 
 (* Generate a session id *)
 let gen_session_id () =

@@ -1,4 +1,4 @@
-open Ahrefs_types.Types
+open Roladeck_types.Types
 
 let system_prompt = {|You are a company researcher. Your job is to build a comprehensive brief about a company to help a recruiter personalise their hiring outreach and AI sourcing.
 

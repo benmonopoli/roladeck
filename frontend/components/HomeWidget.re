@@ -1,4 +1,4 @@
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 type loadState =
   | Idle
@@ -18,10 +18,10 @@ module CompactSourcing = {
     let (copied, setCopied)       = React.useState(() => "");
 
     React.useEffect0(() => {
-      Ahrefs_frontend_api.Api.getSkills()
+      Roladeck_frontend_api.Api.getSkills()
       |> Js.Promise.then_((all : list(skill_summary)) => {
         let roles = List.filter(
-          (s : skill_summary) => Ahrefs_frontend_api.Api.isRolePlaybook(s.id),
+          (s : skill_summary) => Roladeck_frontend_api.Api.isRolePlaybook(s.id),
           all
         );
         setSkills(_ => roles);
@@ -70,7 +70,7 @@ module CompactSourcing = {
     let handleSubmit = _ => {
       if (String.length(roleId) == 0) { () } else {
         setState(_ => Loading);
-        Ahrefs_frontend_api.Api.postAiSource(~roleId, ~seniority, ~context)
+        Roladeck_frontend_api.Api.postAiSource(~roleId, ~seniority, ~context)
         |> Js.Promise.then_(result => {
           setState(_ => Done(result));
           Js.Promise.resolve();
@@ -87,7 +87,7 @@ module CompactSourcing = {
     };
 
     let copyText = (text, key) => {
-      Ahrefs_frontend_api.Api.Clipboard.writeText(text)
+      Roladeck_frontend_api.Api.Clipboard.writeText(text)
       |> Js.Promise.then_(_ => {
         setCopied(_ => key);
         let _ = Js.Global.setTimeout(~f=() => setCopied(_ => ""), 2000);
@@ -231,7 +231,7 @@ module CompactSourcing = {
 [@react.component]
 let make = (~onGoScore: unit => unit) => {
   let pref =
-    Ahrefs_frontend_api.Api.LocalStorage.get("home_widget_pref")
+    Roladeck_frontend_api.Api.LocalStorage.get("home_widget_pref")
     |> Option.value(~default="sourcing");
 
   switch (pref) {

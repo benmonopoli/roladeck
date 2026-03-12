@@ -1,5 +1,5 @@
 /* Api.re  -  fetch wrappers using shared types */
-open Ahrefs_types.Types;
+open Roladeck_types.Types;
 
 let base = "";  /* same origin  -  Vite proxies /api to :4000 */
 
@@ -225,6 +225,32 @@ let decodeCriterionResult = json => {
   matched_keywords: decodeStringList(getFieldExn(json, "matched_keywords")),
 };
 
+let decodeTrustStatus = json =>
+  switch (Js.Json.decodeString(json)) {
+  | Some("clean")      => TrustClean
+  | Some("suspicious") => TrustSuspicious
+  | _                  => TrustPending
+  };
+
+let decodeTrustCheck = json =>
+  switch (Js.Json.decodeObject(json)) {
+  | None => None
+  | Some(d) => Some({
+      trust_status: switch (Js.Dict.get(d, "trust_status")) {
+        | Some(j) => decodeTrustStatus(j)
+        | None => TrustPending
+      },
+      trust_flags: switch (Js.Dict.get(d, "trust_flags")) {
+        | Some(j) => decodeStringList(j)
+        | None => []
+      },
+      checked_at: switch (Js.Dict.get(d, "checked_at")) {
+        | Some(j) => decodeString(j)
+        | None => ""
+      },
+    })
+  };
+
 /* --- Pool types --- */
 
 let decodeCandidateScore = json => {
@@ -255,6 +281,10 @@ let decodeCandidateRecord = json => {
     | Some(j) => Js.Json.decodeString(j)
     | None => None
   },
+  trust_check: switch (getField(json, "trust_check")) {
+    | Some(j) => decodeTrustCheck(j)
+    | None => None
+  },
 };
 
 let decodeCandidateSummary = json => {
@@ -272,6 +302,14 @@ let decodeCandidateSummary = json => {
     | None => []
   },
   created_at: decodeString(getFieldExn(json, "created_at")),
+  trust_status: switch (getField(json, "trust_status")) {
+    | Some(j) => decodeTrustStatus(j)
+    | None => TrustPending
+  },
+  trust_flags: switch (getField(json, "trust_flags")) {
+    | Some(j) => decodeStringList(j)
+    | None => []
+  },
 };
 
 let decodePoolStats = json => {
@@ -485,6 +523,14 @@ let updateStage = (id, stage) =>
   |> Js.Promise.then_(json =>
     Js.Promise.resolve(Some(decodeCandidateRecord(json)))
   );
+
+let verifyCandidate = (id: string) =>
+  Fetch.fetchWithInit(
+    base ++ "/api/candidates/" ++ id ++ "/verify",
+    Fetch.RequestInit.make(~method_=Post, ())
+  )
+  |> Js.Promise.then_(Fetch.Response.json)
+  |> Js.Promise.then_(json => Js.Promise.resolve(decodeCandidateSummary(json)));
 
 let getCalibration = roleId =>
   fetchJson(base ++ "/api/calibration/" ++ roleId)

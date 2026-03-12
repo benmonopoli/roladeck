@@ -1,11 +1,11 @@
 open Lwt.Infix
-open Ahrefs_types.Types
+open Roladeck_types.Types
 
-module Store    = Ahrefs_storage.Storage
-module GH       = Ahrefs_greenhouse.Greenhouse_client
-module Skills   = Ahrefs_skills_data.Skills_registry
-module Sc       = Ahrefs_scoring.Scoring
-module Classify = Ahrefs_ai.Classify
+module Store    = Roladeck_storage.Storage
+module GH       = Roladeck_greenhouse.Greenhouse_client
+module Skills   = Roladeck_skills_data.Skills_registry
+module Sc       = Roladeck_scoring.Scoring
+module Classify = Roladeck_ai.Classify
 
 let poll_interval_s = 300.0  (* 5 minutes *)
 
@@ -131,6 +131,7 @@ let process_application ~company_id ~api_key (app : GH.gh_application) =
         updated_at = now;
         greenhouse_url = Some gh_url;
         greenhouse_application_id = Some app_id_str;
+        trust_check = None;
       } in
       Store.upsert ~company_id record;
       Lwt.return 1

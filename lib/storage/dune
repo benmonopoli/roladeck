@@ -1,4 +1,4 @@
 (library
- (name ahrefs_storage)
+ (name roladeck_storage)
  (modules storage)
- (libraries ahrefs_types ahrefs_json yojson unix))
+ (libraries roladeck_types roladeck_json yojson unix))
